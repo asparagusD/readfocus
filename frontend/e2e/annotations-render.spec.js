@@ -68,19 +68,45 @@ test.describe('pdf', () => {
   });
 });
 
+/** "#aabbcc" as getComputedStyle writes it. */
+const rgb = (hex) => `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(', ')})`;
+
 test.describe('pdf in lamplight', () => {
   test.use({ colorScheme: 'dark' });
 
-  test('highlights lighten the recoloured page so the light text keeps its colour', async ({ page }) => {
+  // C38.3 (issue 22, D2): a book is never recoloured: a white page on the dark desk, as Edge's dark mode shows it.
+  test('the page is drawn as published and highlights darken it in Paper\'s colours; no Original colours switch', async ({ page }) => {
     await openReader(page);
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'lamplight');
+    await expect(page.getByRole('switch', { name: /original colours/i })).toHaveCount(0);
+    const corner = await page.locator('.rf-pdf-page[data-page="1"] canvas').evaluate((c) => [...c.getContext('2d').getImageData(4, 4, 1, 1).data]);
+    expect(corner).toEqual([255, 255, 255, 255]); // the publisher's white page
+    const desk = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--paper-2').trim());
+    expect(await page.locator('.rf-ov-book').evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(rgb(desk));
     await highlight(page, 'lamp', 'circle', 'Honey highlight');
     const anno = saved(page);
     await expect(anno).toHaveCount(1);
     await expect(anno).toBeVisible();
-    expect(await anno.evaluate((el) => getComputedStyle(el).mixBlendMode)).toBe('lighten');
+    expect(await anno.evaluate((el) => getComputedStyle(el).mixBlendMode)).toBe('darken');
     const fill = await anno.evaluate((el) => getComputedStyle(el).backgroundColor);
-    const token = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--hl-honey').trim());
-    expect(fill).toBe(`rgb(${[1, 3, 5].map((i) => parseInt(token.slice(i, i + 2), 16)).join(', ')})`);
+    const paper = await anno.evaluate((el) => getComputedStyle(el.parentElement).getPropertyValue('--hl-honey').trim());
+    const lamp = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--hl-honey').trim());
+    expect(fill).toBe(rgb(paper));
+    expect(paper).not.toBe(lamp); // Paper's honey, not Lamplight's
+  });
+});
+
+test.describe('epub in lamplight', () => {
+  test.use({ book: 'epub', colorScheme: 'dark' });
+
+  test('the page is the publisher\'s white and its text keeps the publisher\'s colours', async ({ page }) => {
+    await openReader(page);
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'lamplight');
+    expect(await page.locator('.rf-epub').evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgb(255, 255, 255)'); // C38.7a: the column
+    const frame = page.frames().find((f) => f !== page.mainFrame() && !f.isDetached());
+    const ink = await frame.evaluate(() => getComputedStyle(document.querySelector('p')).color);
+    const [r, g, b] = ink.match(/\d+/g).map(Number);
+    expect(r + g + b).toBeLessThan(200); // dark text, as published, not Lamplight's light ink
   });
 });
 

@@ -1,14 +1,13 @@
 import { createContext, useContext } from 'react';
 
 /**
- * The notepad's actions for the rest of the reading page (C22.6): `add({ kind, place, content, imageB64, regionId,
- * annotationId, open })` makes a note from the book and shows it, returning its key; `edit(key, change)` changes
- * it later (a LaTeX that arrives after the note); `drag(make)` remembers what a region dragged from the book
- * would add, and `drop()` adds it. Null where there is no notepad (the gallery).
+ * The notes' actions for the rest of the reading page (C22.6): `add({ kind, place, content, imageB64, regionId })`
+ * puts a block from the book on a notebook page and shows it, returning { key, content }: code and an equation
+ * with its LaTeX as text (C37.3), a figure or an equation with no LaTeX as its picture and caption (C37.6);
+ * `edit(key, change)` changes a note later. Null where there is no notepad (the gallery). The drag onto the notepad
+ * is retired (C37.3): the book is inert while the notebook is open, so nothing could be dropped on it.
  */
 export const NotesContext = createContext(null);
 
 export const useNotesActions = () => useContext(NotesContext);
 
-/** The drag type of a region dragged from the book onto the notepad. */
-export const NOTE_DRAG = 'application/x-readfocus-region';

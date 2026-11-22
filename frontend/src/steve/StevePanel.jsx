@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, ArrowUp, Check, Copy, KeyRound, NotebookPen } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUp, Check, Copy, KeyRound, ListCollapse, NotebookPen } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { ReadingLamp } from '../illustrations';
 import { OwnKeyForm } from './OwnKeyForm';
@@ -54,11 +54,17 @@ function Consent({ notice, onAccept, onLater, onKey }) {
   );
 }
 
-function Empty({ chapter, onAsk }) {
+function Empty({ chapter, onAsk, onSummarizePage }) {
   const name = chapterName(chapter);
   return (
     <>
       <Identity title="Ask Steve about these pages" role={name ? `He has read “${name}” and the pages around it.` : 'He has read these pages and the ones around them.'} />
+      {onSummarizePage && ( // C40.6 (issue 24): Copilot's Summarize, for the page the reader is on
+        <button type="button" className="rf-steve-page" onClick={onSummarizePage}>
+          <ListCollapse size={16} strokeWidth={1.75} aria-hidden="true" />
+          <span>Summarize this page</span>
+        </button>
+      )}
       <div className="rf-steve-sugg">
         {suggestions(chapter).map((question) => (
           <button key={question} type="button" className="rf-steve-sg" onClick={() => onAsk({ question })}>
@@ -189,7 +195,7 @@ function KeyView({ enabled, onEnabled, onBack }) {
  * the conversation (streaming answers, citations, stop, errors), resting (quota) and settings with the own key.
  * `onClose` closes the whole panel ("Not now", "Keep reading").
  */
-export function StevePanel({ steve, chapter, onCite, onClose, onSaveNote = null }) {
+export function StevePanel({ steve, chapter, onCite, onClose, onSaveNote = null, onSummarizePage = null }) {
   const { state, ask, stop, retry, accept, setEnabled, dispatch, reload } = steve;
   const [draft, setDraft] = useState('');
   const body = useRef(null);
@@ -235,7 +241,7 @@ export function StevePanel({ steve, chapter, onCite, onClose, onSaveNote = null 
   } else if (state.view === 'key') {
     content = <KeyView enabled={state.enabled} onEnabled={setEnabled} onBack={() => dispatch({ type: 'back' })} />;
   } else if (!state.messages.length) {
-    content = <Empty chapter={chapter} onAsk={ask} />;
+    content = <Empty chapter={chapter} onAsk={ask} onSummarizePage={onSummarizePage} />;
   } else {
     content = <Conversation messages={state.messages} pages={state.pages} onCite={onCite} onStop={stop} onRetry={retry} onSaveNote={onSaveNote} />;
   }

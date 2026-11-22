@@ -1,14 +1,14 @@
 // Steve's panel in the reader (C20.7b, handoff screens 13-17): consent, suggestions, a streamed answer with
 // math, code and citation chips that move the book, resting, errors, settings, the sheet on a phone, keyboard
 // and reduced motion. Every /steve call is mocked in fixtures.js.
-import { test, expect, openReader, settled, shown, steveStream, STEVE_NOTICE } from './fixtures.js';
+import { clickTool, expect, openReader, settled, shown, STEVE_NOTICE, steveStream, test } from './fixtures.js';
 
 const shots = process.env.E2E_SHOTS;
 const panel = (page) => page.getByRole('complementary', { name: 'Steve' });
 
 async function openSteve(page) {
   await openReader(page);
-  await page.getByRole('button', { name: 'Ask Steve' }).click();
+  await clickTool(page, page.getByRole('button', { name: 'Ask Steve' })); // C38.4b: in More tools on a phone
   await expect(panel(page)).toBeVisible();
 }
 
@@ -31,7 +31,8 @@ test('Not now closes the panel and nothing is sent', async ({ page, api }) => {
   await openSteve(page);
   await panel(page).getByRole('button', { name: 'Not now' }).click();
   await expect(panel(page)).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Ask Steve' })).toBeFocused();
+  // Focus back on the opener; More tools when Steve is tucked in it (C39.3b).
+  await expect((await page.getByRole('button', { name: 'Ask Steve' }).isVisible()) ? page.getByRole('button', { name: 'Ask Steve' }) : page.getByRole('button', { name: 'More tools' })).toBeFocused();
   expect(api.steve.puts).toEqual([]);
 });
 
@@ -115,15 +116,17 @@ test('keyboard: the panel takes focus, Esc closes it and focus returns to the to
   api.steve.consented = true;
   await openReader(page);
   const button = page.getByRole('button', { name: 'Ask Steve' });
+  const tucked = !(await button.isVisible()); // in More tools when the bar is full (C39.3)
+  if (tucked) await page.getByRole('button', { name: 'More tools' }).click();
   await button.focus();
   await page.keyboard.press('Enter');
-  await expect(button).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.getByRole('button', { name: 'Ask Steve', includeHidden: true })).toHaveAttribute('aria-expanded', 'true');
   await expect(panel(page).getByRole('tab', { name: 'Steve', exact: true })).toBeFocused(); // C22.2: Steve is a tab
   await page.keyboard.press('Tab');
   await expect(panel(page).getByRole('button', { name: 'Close Steve' })).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(panel(page)).toHaveCount(0);
-  await expect(button).toBeFocused();
+  await expect(tucked ? page.getByRole('button', { name: 'More tools' }) : button).toBeFocused();
 });
 
 test('the book stays usable beside the panel', async ({ page, api }) => {

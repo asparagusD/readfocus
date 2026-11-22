@@ -8,6 +8,14 @@ import { createContext, useContext } from 'react';
 export const SteveContext = createContext(null);
 
 /**
+ * C40.6 (issue 24): Steve in Copilot's place: what Explain and Summarize ask about a passage (`anchor`, ANCHORS A1).
+ * `kind` is 'explain' or 'summarize'.
+ */
+export const passageRequest = (anchor, kind) => (kind === 'summarize'
+  ? { question: 'Summarize this passage.', mode: 'summarize_selection', anchor, label: 'Summarize this passage' }
+  : { question: 'Explain this passage.', mode: 'explain_highlight', anchor, label: 'Explain this passage' });
+
+/**
  * Steve's actions, or null outside the reading page and while he is switched off (steve-guardrails S2), so every
  * caller hides its "Ask Steve" and Explain entry points the same way.
  */

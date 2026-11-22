@@ -202,3 +202,16 @@
   .rf-focus-card { grid-template-columns: auto 1fr; }
   .rf-focus-card .rf-focus-button { grid-column: 1 / -1; justify-self: end; }
 }
+
+/* C40.3b: Read aloud pressed while it reads, as on the toolbar */
+.rf-focus-button[aria-pressed="true"] { background: var(--accent-soft); }
+
+/* C40.3b: with Read aloud, six actions share a phone's row: closer together, End session a little narrower; every
+   target stays 44 px. */
+@media (width < 420px) {
+  .rf-focus-actions { gap: var(--space-1); }
+  .rf-focus-button--primary { padding-inline: var(--space-2); }
+}
+@media (width < 370px) { /* "End", its name still "End session" to a screen reader */
+  .rf-focus-end-rest { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
+}

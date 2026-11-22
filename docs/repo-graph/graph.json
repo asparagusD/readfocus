@@ -16,6 +16,13 @@
       "handler": "delete_book"
     },
     {
+      "id": "endpoint:DELETE /marks/{mark_id}",
+      "type": "endpoint",
+      "method": "DELETE",
+      "path": "/marks/{mark_id}",
+      "handler": "delete_mark"
+    },
+    {
       "id": "endpoint:DELETE /notes/{note_id}",
       "type": "endpoint",
       "method": "DELETE",
@@ -77,6 +84,13 @@
       "method": "GET",
       "path": "/books/{book_id}/file",
       "handler": "get_book_file"
+    },
+    {
+      "id": "endpoint:GET /books/{book_id}/marks",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/books/{book_id}/marks",
+      "handler": "list_marks"
     },
     {
       "id": "endpoint:GET /books/{book_id}/notes",
@@ -247,6 +261,13 @@
       "handler": "restyle_annotation"
     },
     {
+      "id": "endpoint:PATCH /marks/{mark_id}",
+      "type": "endpoint",
+      "method": "PATCH",
+      "path": "/marks/{mark_id}",
+      "handler": "change_mark"
+    },
+    {
       "id": "endpoint:PATCH /notes/{note_id}",
       "type": "endpoint",
       "method": "PATCH",
@@ -287,6 +308,13 @@
       "method": "POST",
       "path": "/books/{book_id}/annotations",
       "handler": "create_annotation"
+    },
+    {
+      "id": "endpoint:POST /books/{book_id}/marks",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/books/{book_id}/marks",
+      "handler": "create_mark"
     },
     {
       "id": "endpoint:POST /books/{book_id}/note-files",
@@ -1126,6 +1154,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/routers/page_marks.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
       "id": "file:backend/routers/progress.py",
       "type": "file",
       "role": "router",
@@ -1457,6 +1491,18 @@
     },
     {
       "id": "file:backend/tests/fixtures/steve_prompts/latex_equation.txt",
+      "type": "file",
+      "role": "test",
+      "language": "text"
+    },
+    {
+      "id": "file:backend/tests/fixtures/steve_prompts/summarize_page.txt",
+      "type": "file",
+      "role": "test",
+      "language": "text"
+    },
+    {
+      "id": "file:backend/tests/fixtures/steve_prompts/summarize_selection.txt",
       "type": "file",
       "role": "test",
       "language": "text"
@@ -1960,6 +2006,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_page_marks_api.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_pdf_text.py",
       "type": "file",
       "role": "test",
@@ -2428,6 +2480,24 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/colours.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/comments.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/contents-pane.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/converted.spec.js",
       "type": "file",
       "role": "config",
@@ -2452,7 +2522,19 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/erase.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/errors.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/find.spec.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -2548,6 +2630,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/ink.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/journey.spec.js",
       "type": "file",
       "role": "config",
@@ -2590,7 +2678,25 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/marks-frame-rate.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/markup-tools.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/no-blank.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/notebook-frame-rate.spec.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -2615,12 +2721,6 @@
     },
     {
       "id": "file:frontend/e2e/notes-drawing.spec.js",
-      "type": "file",
-      "role": "config",
-      "language": "javascript"
-    },
-    {
-      "id": "file:frontend/e2e/notes-editor.spec.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -2656,6 +2756,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/pages-tab.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/pdf-open.spec.js",
       "type": "file",
       "role": "config",
@@ -2669,6 +2775,12 @@
     },
     {
       "id": "file:frontend/e2e/phase2_journey.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/print.spec.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -2692,6 +2804,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/read-aloud-save-frame-rate.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/read-aloud.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/reader.spec.js",
       "type": "file",
       "role": "config",
@@ -2710,13 +2834,43 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/save-copy.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/scroll-frame-rate.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/selection-menu.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/shell.spec.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/shortcuts.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/steve-blocks.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/steve-copilot.spec.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -2747,6 +2901,12 @@
     },
     {
       "id": "file:frontend/e2e/testSession.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/textbox.spec.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -2908,6 +3068,30 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/annotations/ColourDots.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/annotations/CommentEditor.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/annotations/CommentMarkers.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/annotations/SelectionMenu.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/annotations/SelectionToolbar.css",
       "type": "file",
       "role": "asset",
@@ -2938,6 +3122,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/annotations/ink.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/ink.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/annotations/list.js",
       "type": "file",
       "role": "asset",
@@ -2945,6 +3141,18 @@
     },
     {
       "id": "file:frontend/src/annotations/list.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/markup.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/markup.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -2980,6 +3188,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/annotations/textbox.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/textbox.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/annotations/useAnnotationChip.js",
       "type": "file",
       "role": "asset",
@@ -2987,6 +3207,18 @@
     },
     {
       "id": "file:frontend/src/annotations/useAnnotations.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/useMarkupTool.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/usePageMarks.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -3838,6 +4070,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/notes/Notebook.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/notes/Notebook.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/notes/Notepad.css",
       "type": "file",
       "role": "asset",
@@ -3863,18 +4107,6 @@
     },
     {
       "id": "file:frontend/src/notes/SidePanel.jsx",
-      "type": "file",
-      "role": "asset",
-      "language": "jsx"
-    },
-    {
-      "id": "file:frontend/src/notes/TextEditor.css",
-      "type": "file",
-      "role": "asset",
-      "language": "css"
-    },
-    {
-      "id": "file:frontend/src/notes/TextEditor.jsx",
       "type": "file",
       "role": "asset",
       "language": "jsx"
@@ -3940,25 +4172,61 @@
       "language": "javascript"
     },
     {
-      "id": "file:frontend/src/notes/mathNodes.js",
+      "id": "file:frontend/src/notes/moveTyped.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
     },
     {
-      "id": "file:frontend/src/notes/mathRules.js",
+      "id": "file:frontend/src/notes/moveTyped.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
     },
     {
-      "id": "file:frontend/src/notes/mathRules.test.js",
+      "id": "file:frontend/src/notes/notebookItems.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/notebookItems.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/notebookPages.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/notebookPages.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
     },
     {
       "id": "file:frontend/src/notes/notesApi.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/pageImages.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/pageImages.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/pageText.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -4013,6 +4281,18 @@
     },
     {
       "id": "file:frontend/src/originalview/BookLookup.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/originalview/FindBar.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/originalview/PlaceMark.jsx",
       "type": "file",
       "role": "asset",
       "language": "jsx"
@@ -4102,6 +4382,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/originalview/find.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/find.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/originalview/frame.css",
       "type": "file",
       "role": "asset",
@@ -4120,6 +4412,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/originalview/pdf/InkLayer.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/originalview/pdf/PdfBook.jsx",
       "type": "file",
       "role": "asset",
@@ -4127,6 +4425,12 @@
     },
     {
       "id": "file:frontend/src/originalview/pdf/PdfPage.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/TextBoxes.jsx",
       "type": "file",
       "role": "asset",
       "language": "jsx"
@@ -4204,18 +4508,6 @@
       "language": "javascript"
     },
     {
-      "id": "file:frontend/src/originalview/pdf/recolour.js",
-      "type": "file",
-      "role": "asset",
-      "language": "javascript"
-    },
-    {
-      "id": "file:frontend/src/originalview/pdf/recolour.test.js",
-      "type": "file",
-      "role": "asset",
-      "language": "javascript"
-    },
-    {
       "id": "file:frontend/src/originalview/pdf/regions.js",
       "type": "file",
       "role": "asset",
@@ -4246,13 +4538,25 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/originalview/scroll.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/scroll.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/originalview/useBoxSize.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
     },
     {
-      "id": "file:frontend/src/originalview/useLamplight.js",
+      "id": "file:frontend/src/originalview/useFind.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -4456,7 +4760,31 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/reader/MarkupTools.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/reader/PagesPanel.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/reader/PhraseChip.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/reader/ReadAloudBar.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/reader/ReadAloudBar.jsx",
       "type": "file",
       "role": "asset",
       "language": "jsx"
@@ -4552,6 +4880,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/reader/marksMarkdown.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/marksMarkdown.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/reader/openAhead.js",
       "type": "file",
       "role": "asset",
@@ -4559,6 +4899,54 @@
     },
     {
       "id": "file:frontend/src/reader/openAhead.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/readAloud.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/readAloud.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/saveCopy.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/saveCopy.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/saveCopy.worker.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/saveCopy.worker.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/speech.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/speech.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -4582,7 +4970,25 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/reader/useMedia.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/reader/usePlaceSaver.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/useReadAloud.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/useSaveCopy.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -4643,12 +5049,6 @@
     },
     {
       "id": "file:frontend/src/steve/LatexDialog.jsx",
-      "type": "file",
-      "role": "asset",
-      "language": "jsx"
-    },
-    {
-      "id": "file:frontend/src/steve/NoteGrip.jsx",
       "type": "file",
       "role": "asset",
       "language": "jsx"
@@ -5470,6 +5870,12 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/036_page_marks.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -5700,6 +6106,10 @@
       "type": "table"
     },
     {
+      "id": "table:page_marks",
+      "type": "table"
+    },
+    {
       "id": "table:page_ocr",
       "type": "table"
     },
@@ -5855,6 +6265,11 @@
       "to": "table:focus_sessions"
     },
     {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/036_page_marks.sql",
+      "to": "table:annotations"
+    },
+    {
       "type": "calls_endpoint",
       "from": "file:frontend/src/annotations/useAnnotations.js",
       "to": "endpoint:DELETE /annotations/{annotation_id}"
@@ -5873,6 +6288,26 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/annotations/useAnnotations.js",
       "to": "endpoint:POST /books/{book_id}/annotations"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/annotations/usePageMarks.js",
+      "to": "endpoint:DELETE /marks/{mark_id}"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/annotations/usePageMarks.js",
+      "to": "endpoint:GET /books/{book_id}/marks"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/annotations/usePageMarks.js",
+      "to": "endpoint:PATCH /marks/{mark_id}"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/annotations/usePageMarks.js",
+      "to": "endpoint:POST /books/{book_id}/marks"
     },
     {
       "type": "calls_endpoint",
@@ -6013,6 +6448,11 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/Results.jsx",
       "to": "endpoint:GET /sessions/{session_id}"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/reader/useSaveCopy.js",
+      "to": "endpoint:GET /books/{book_id}/marks"
     },
     {
       "type": "calls_endpoint",
@@ -6530,6 +6970,26 @@
     },
     {
       "type": "defines_endpoint",
+      "from": "file:backend/routers/page_marks.py",
+      "to": "endpoint:DELETE /marks/{mark_id}"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/page_marks.py",
+      "to": "endpoint:GET /books/{book_id}/marks"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/page_marks.py",
+      "to": "endpoint:PATCH /marks/{mark_id}"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/page_marks.py",
+      "to": "endpoint:POST /books/{book_id}/marks"
+    },
+    {
+      "type": "defines_endpoint",
       "from": "file:backend/routers/progress.py",
       "to": "endpoint:GET /badges"
     },
@@ -6847,6 +7307,11 @@
       "type": "defines_table",
       "from": "file:supabase/migrations/034_reading_days.sql",
       "to": "table:reading_days"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/036_page_marks.sql",
+      "to": "table:page_marks"
     },
     {
       "type": "graph_edge",
@@ -7505,6 +7970,11 @@
     {
       "type": "imports",
       "from": "file:backend/main.py",
+      "to": "file:backend/routers/page_marks.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
       "to": "file:backend/routers/progress.py"
     },
     {
@@ -7920,6 +8390,31 @@
     {
       "type": "imports",
       "from": "file:backend/routers/ocr.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/page_marks.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/page_marks.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/page_marks.py",
+      "to": "file:backend/services/anchor_checks.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/page_marks.py",
+      "to": "file:backend/services/book_purge.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/page_marks.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -9345,6 +9840,11 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_book_deleting_hidden.py",
+      "to": "file:backend/routers/page_marks.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
       "to": "file:backend/routers/reading.py"
     },
     {
@@ -10304,6 +10804,26 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_page_marks_api.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_page_marks_api.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_page_marks_api.py",
+      "to": "file:backend/routers/page_marks.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_page_marks_api.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_pdf_text.py",
       "to": "file:backend/services/book_ingestor.py"
     },
@@ -11059,6 +11579,21 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/colours.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/comments.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/contents-pane.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/converted.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -11079,7 +11614,17 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/erase.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/errors.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/find.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {
@@ -11119,6 +11664,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/ink.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/journey.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -11154,7 +11704,32 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/marks-frame-rate.spec.js",
+      "to": "file:frontend/e2e/bigPdf.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/marks-frame-rate.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/markup-tools.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/no-blank.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/notebook-frame-rate.spec.js",
+      "to": "file:frontend/e2e/bigPdf.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/notebook-frame-rate.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {
@@ -11175,11 +11750,6 @@
     {
       "type": "imports",
       "from": "file:frontend/e2e/notes-drawing.spec.js",
-      "to": "file:frontend/e2e/fixtures.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/e2e/notes-editor.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {
@@ -11209,6 +11779,16 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/pages-tab.spec.js",
+      "to": "file:frontend/e2e/bigPdf.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/pages-tab.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/pdf-open.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -11234,6 +11814,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/print.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/privacy.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -11245,6 +11830,21 @@
     {
       "type": "imports",
       "from": "file:frontend/e2e/quiz-me.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/read-aloud-save-frame-rate.spec.js",
+      "to": "file:frontend/e2e/bigPdf.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/read-aloud-save-frame-rate.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/read-aloud.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {
@@ -11269,12 +11869,42 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/save-copy.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/scroll-frame-rate.spec.js",
+      "to": "file:frontend/e2e/bigPdf.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/scroll-frame-rate.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/selection-menu.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/shell.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/shortcuts.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/steve-blocks.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/steve-copilot.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {
@@ -11301,6 +11931,11 @@
       "type": "imports",
       "from": "file:frontend/e2e/test.spec.js",
       "to": "file:frontend/e2e/testSession.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/textbox.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
     },
     {
       "type": "imports",
@@ -11385,6 +12020,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/annotations/AnnotationChip.jsx",
+      "to": "file:frontend/src/annotations/ColourDots.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/AnnotationChip.jsx",
       "to": "file:frontend/src/annotations/SelectionToolbar.css"
     },
     {
@@ -11401,6 +12041,46 @@
       "type": "imports",
       "from": "file:frontend/src/annotations/AnnotationChip.jsx",
       "to": "file:frontend/src/steve/SteveContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/ColourDots.jsx",
+      "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/CommentEditor.jsx",
+      "to": "file:frontend/src/annotations/SelectionToolbar.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/CommentEditor.jsx",
+      "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/CommentMarkers.jsx",
+      "to": "file:frontend/src/notes/markers.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/SelectionMenu.jsx",
+      "to": "file:frontend/src/annotations/SelectionToolbar.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/SelectionMenu.jsx",
+      "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/SelectionMenu.jsx",
+      "to": "file:frontend/src/steve/SteveContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/SelectionToolbar.jsx",
+      "to": "file:frontend/src/annotations/ColourDots.jsx"
     },
     {
       "type": "imports",
@@ -11444,8 +12124,23 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/annotations/ink.test.js",
+      "to": "file:frontend/src/annotations/ink.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/annotations/list.test.js",
       "to": "file:frontend/src/annotations/list.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/markup.js",
+      "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/markup.test.js",
+      "to": "file:frontend/src/annotations/markup.js"
     },
     {
       "type": "imports",
@@ -11469,6 +12164,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/annotations/textbox.test.js",
+      "to": "file:frontend/src/annotations/textbox.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/annotations/useAnnotationChip.js",
       "to": "file:frontend/src/annotations/hover.js"
     },
@@ -11480,6 +12180,41 @@
     {
       "type": "imports",
       "from": "file:frontend/src/annotations/useAnnotations.js",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/useMarkupTool.js",
+      "to": "file:frontend/src/annotations/ink.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/useMarkupTool.js",
+      "to": "file:frontend/src/annotations/markup.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/useMarkupTool.js",
+      "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/useMarkupTool.js",
+      "to": "file:frontend/src/annotations/textbox.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/usePageMarks.js",
+      "to": "file:frontend/src/annotations/ink.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/usePageMarks.js",
+      "to": "file:frontend/src/components/ui/toastContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/usePageMarks.js",
       "to": "file:frontend/src/lib/api.js"
     },
     {
@@ -11920,11 +12655,6 @@
     {
       "type": "imports",
       "from": "file:frontend/src/gallery/BookGallery.jsx",
-      "to": "file:frontend/src/originalview/useLamplight.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/gallery/BookGallery.jsx",
       "to": "file:frontend/src/reader/ReaderToolbar.jsx"
     },
     {
@@ -12339,13 +13069,13 @@
     },
     {
       "type": "imports",
-      "from": "file:frontend/src/notes/DrawingNote.jsx",
-      "to": "file:frontend/src/notes/drawing.js"
+      "from": "file:frontend/src/notes/DrawingEditor.jsx",
+      "to": "file:frontend/src/notes/pageImages.js"
     },
     {
       "type": "imports",
-      "from": "file:frontend/src/notes/DrawingNote.jsx",
-      "to": "file:frontend/src/notes/excalidrawFonts.js"
+      "from": "file:frontend/src/notes/DrawingEditor.jsx",
+      "to": "file:frontend/src/notes/pageText.js"
     },
     {
       "type": "imports",
@@ -12361,6 +13091,46 @@
       "type": "imports",
       "from": "file:frontend/src/notes/NoteDoc.jsx",
       "to": "file:frontend/src/steve/SteveMath.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notebook.jsx",
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notebook.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notebook.jsx",
+      "to": "file:frontend/src/notes/Notebook.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notebook.jsx",
+      "to": "file:frontend/src/notes/Notepad.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notebook.jsx",
+      "to": "file:frontend/src/notes/drawing.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notebook.jsx",
+      "to": "file:frontend/src/notes/excalidrawFonts.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notebook.jsx",
+      "to": "file:frontend/src/notes/notebookPages.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notebook.jsx",
+      "to": "file:frontend/src/notes/place.js"
     },
     {
       "type": "imports",
@@ -12395,11 +13165,6 @@
     {
       "type": "imports",
       "from": "file:frontend/src/notes/Notepad.jsx",
-      "to": "file:frontend/src/notes/NotesContext.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/notes/Notepad.jsx",
       "to": "file:frontend/src/notes/place.js"
     },
     {
@@ -12416,16 +13181,6 @@
       "type": "imports",
       "from": "file:frontend/src/notes/SidePanel.jsx",
       "to": "file:frontend/src/notes/SidePanel.css"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/notes/TextEditor.jsx",
-      "to": "file:frontend/src/notes/TextEditor.css"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/notes/TextEditor.jsx",
-      "to": "file:frontend/src/notes/mathNodes.js"
     },
     {
       "type": "imports",
@@ -12454,11 +13209,6 @@
     },
     {
       "type": "imports",
-      "from": "file:frontend/src/notes/fromBook.js",
-      "to": "file:frontend/src/steve/answer.js"
-    },
-    {
-      "type": "imports",
       "from": "file:frontend/src/notes/fromBook.test.js",
       "to": "file:frontend/src/notes/fromBook.js"
     },
@@ -12474,23 +13224,43 @@
     },
     {
       "type": "imports",
-      "from": "file:frontend/src/notes/mathNodes.js",
-      "to": "file:frontend/src/notes/mathRules.js"
+      "from": "file:frontend/src/notes/moveTyped.test.js",
+      "to": "file:frontend/src/notes/moveTyped.js"
     },
     {
       "type": "imports",
-      "from": "file:frontend/src/notes/mathNodes.js",
-      "to": "file:frontend/src/steve/math.js"
+      "from": "file:frontend/src/notes/notebookItems.js",
+      "to": "file:frontend/src/notes/drawing.js"
     },
     {
       "type": "imports",
-      "from": "file:frontend/src/notes/mathRules.test.js",
-      "to": "file:frontend/src/notes/mathRules.js"
+      "from": "file:frontend/src/notes/notebookItems.js",
+      "to": "file:frontend/src/steve/answer.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/notebookItems.test.js",
+      "to": "file:frontend/src/notes/notebookItems.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/notebookPages.js",
+      "to": "file:frontend/src/notes/sync.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/notebookPages.test.js",
+      "to": "file:frontend/src/notes/notebookPages.js"
     },
     {
       "type": "imports",
       "from": "file:frontend/src/notes/notesApi.js",
       "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/pageImages.test.js",
+      "to": "file:frontend/src/notes/pageImages.js"
     },
     {
       "type": "imports",
@@ -12580,12 +13350,37 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/annotations/CommentEditor.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/annotations/CommentMarkers.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/annotations/SelectionMenu.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/annotations/SelectionToolbar.jsx"
     },
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/annotations/hover.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/annotations/textbox.js"
     },
     {
       "type": "imports",
@@ -12625,6 +13420,16 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/originalview/FindBar.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/originalview/PlaceMark.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/originalview/epub/EpubBook.jsx"
     },
     {
@@ -12660,7 +13465,17 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
-      "to": "file:frontend/src/originalview/useLamplight.js"
+      "to": "file:frontend/src/originalview/useFind.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/reader/ReadAloudBar.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/reader/useReadAloud.js"
     },
     {
       "type": "imports",
@@ -12725,7 +13540,22 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/epub/EpubBook.jsx",
+      "to": "file:frontend/src/originalview/find.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/epub/EpubBook.jsx",
       "to": "file:frontend/src/originalview/frame.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/epub/EpubBook.jsx",
+      "to": "file:frontend/src/originalview/scroll.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/epub/EpubBook.jsx",
+      "to": "file:frontend/src/reader/readAloud.js"
     },
     {
       "type": "imports",
@@ -12784,8 +13614,18 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/originalview/find.test.js",
+      "to": "file:frontend/src/originalview/find.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/originalview/frame.test.js",
       "to": "file:frontend/src/originalview/frame.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/InkLayer.jsx",
+      "to": "file:frontend/src/annotations/ink.js"
     },
     {
       "type": "imports",
@@ -12811,6 +13651,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
       "to": "file:frontend/src/notes/markers.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
+      "to": "file:frontend/src/originalview/find.js"
     },
     {
       "type": "imports",
@@ -12845,12 +13690,32 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
+      "to": "file:frontend/src/originalview/scroll.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
       "to": "file:frontend/src/originalview/useBoxSize.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
+      "to": "file:frontend/src/reader/readAloud.js"
     },
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfPage.jsx",
       "to": "file:frontend/src/annotations/paint.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfPage.jsx",
+      "to": "file:frontend/src/originalview/pdf/InkLayer.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfPage.jsx",
+      "to": "file:frontend/src/originalview/pdf/TextBoxes.jsx"
     },
     {
       "type": "imports",
@@ -12866,6 +13731,16 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfPage.jsx",
       "to": "file:frontend/src/originalview/pdf/pdfjs.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/TextBoxes.jsx",
+      "to": "file:frontend/src/annotations/ink.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/TextBoxes.jsx",
+      "to": "file:frontend/src/annotations/textbox.js"
     },
     {
       "type": "imports",
@@ -12894,18 +13769,8 @@
     },
     {
       "type": "imports",
-      "from": "file:frontend/src/originalview/pdf/pdfjs.js",
-      "to": "file:frontend/src/originalview/pdf/recolour.js"
-    },
-    {
-      "type": "imports",
       "from": "file:frontend/src/originalview/pdf/rangeSource.test.js",
       "to": "file:frontend/src/originalview/pdf/rangeSource.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/originalview/pdf/recolour.test.js",
-      "to": "file:frontend/src/originalview/pdf/recolour.js"
     },
     {
       "type": "imports",
@@ -12936,6 +13801,21 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/place.test.js",
       "to": "file:frontend/src/originalview/place.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/scroll.test.js",
+      "to": "file:frontend/src/originalview/frame.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/scroll.test.js",
+      "to": "file:frontend/src/originalview/scroll.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/useFind.js",
+      "to": "file:frontend/src/originalview/find.js"
     },
     {
       "type": "imports",
@@ -13295,7 +14175,27 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/annotations/ink.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/annotations/textbox.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/annotations/useAnnotations.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/annotations/useMarkupTool.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/annotations/usePageMarks.js"
     },
     {
       "type": "imports",
@@ -13365,6 +14265,16 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/notes/Notebook.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/notes/Notepad.jsx"
     },
     {
@@ -13380,7 +14290,32 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "to": "file:frontend/src/notes/fromBook.js"
+      "to": "file:frontend/src/notes/drawing.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/notes/excalidrawFonts.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/notes/moveTyped.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/notes/notebookItems.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/notes/notebookPages.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/notes/notesApi.js"
     },
     {
       "type": "imports",
@@ -13415,6 +14350,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/originalview/frame.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/originalview/pdf/ocr.js"
     },
     {
@@ -13430,17 +14370,17 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "to": "file:frontend/src/originalview/useLamplight.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/pages/ReadingSession.css"
     },
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/reader/ContentsDrawer.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/MarkupTools.jsx"
     },
     {
       "type": "imports",
@@ -13465,7 +14405,22 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/useMedia.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/reader/usePlaceSaver.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/useReadAloud.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/useSaveCopy.js"
     },
     {
       "type": "imports",
@@ -13639,6 +14594,41 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/reader/ContentsDrawer.jsx",
+      "to": "file:frontend/src/reader/PagesPanel.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/MarkupTools.jsx",
+      "to": "file:frontend/src/annotations/SelectionToolbar.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/MarkupTools.jsx",
+      "to": "file:frontend/src/annotations/ink.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/MarkupTools.jsx",
+      "to": "file:frontend/src/annotations/markup.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/MarkupTools.jsx",
+      "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/MarkupTools.jsx",
+      "to": "file:frontend/src/annotations/roving.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/MarkupTools.jsx",
+      "to": "file:frontend/src/annotations/textbox.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/reader/PhraseChip.jsx",
       "to": "file:frontend/src/reader/WordCard.css"
     },
@@ -13646,6 +14636,16 @@
       "type": "imports",
       "from": "file:frontend/src/reader/PhraseChip.jsx",
       "to": "file:frontend/src/reader/highlight.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/ReadAloudBar.jsx",
+      "to": "file:frontend/src/reader/ReadAloudBar.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/ReadAloudBar.jsx",
+      "to": "file:frontend/src/reader/speech.js"
     },
     {
       "type": "imports",
@@ -13661,6 +14661,11 @@
       "type": "imports",
       "from": "file:frontend/src/reader/ReaderToolbar.jsx",
       "to": "file:frontend/src/reader/textSize.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/ReaderToolbar.jsx",
+      "to": "file:frontend/src/reader/useMedia.js"
     },
     {
       "type": "imports",
@@ -13714,8 +14719,58 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/reader/marksMarkdown.js",
+      "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/marksMarkdown.test.js",
+      "to": "file:frontend/src/reader/marksMarkdown.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/reader/openAhead.test.js",
       "to": "file:frontend/src/reader/openAhead.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/readAloud.test.js",
+      "to": "file:frontend/src/reader/readAloud.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/saveCopy.js",
+      "to": "file:frontend/src/annotations/ink.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/saveCopy.test.js",
+      "to": "file:frontend/src/reader/saveCopy.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/saveCopy.worker.js",
+      "to": "file:frontend/src/reader/saveCopy.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/saveCopy.worker.test.js",
+      "to": "file:frontend/src/reader/saveCopy.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/speech.js",
+      "to": "file:frontend/src/reader/readAloud.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/speech.test.js",
+      "to": "file:frontend/src/reader/readAloud.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/speech.test.js",
+      "to": "file:frontend/src/reader/speech.js"
     },
     {
       "type": "imports",
@@ -13726,6 +14781,36 @@
       "type": "imports",
       "from": "file:frontend/src/reader/usePlaceSaver.js",
       "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/useReadAloud.js",
+      "to": "file:frontend/src/reader/readAloud.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/useReadAloud.js",
+      "to": "file:frontend/src/reader/speech.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/useSaveCopy.js",
+      "to": "file:frontend/src/components/ui/toastContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/useSaveCopy.js",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/useSaveCopy.js",
+      "to": "file:frontend/src/reader/marksMarkdown.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/useSaveCopy.js",
+      "to": "file:frontend/src/reader/saveCopy.js"
     },
     {
       "type": "imports",
@@ -13790,11 +14875,6 @@
     {
       "type": "imports",
       "from": "file:frontend/src/steve/EpubBlockActions.jsx",
-      "to": "file:frontend/src/steve/NoteGrip.jsx"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/steve/EpubBlockActions.jsx",
       "to": "file:frontend/src/steve/SteveContext.js"
     },
     {
@@ -13831,11 +14911,6 @@
       "type": "imports",
       "from": "file:frontend/src/steve/LatexDialog.jsx",
       "to": "file:frontend/src/steve/SteveMath.jsx"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/steve/NoteGrip.jsx",
-      "to": "file:frontend/src/notes/NotesContext.js"
     },
     {
       "type": "imports",
@@ -13901,11 +14976,6 @@
       "type": "imports",
       "from": "file:frontend/src/steve/PdfBlockActions.jsx",
       "to": "file:frontend/src/steve/LatexDialog.jsx"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
-      "to": "file:frontend/src/steve/NoteGrip.jsx"
     },
     {
       "type": "imports",
@@ -14949,6 +16019,16 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/routers/page_marks.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/page_marks.py",
+      "to": "table:page_marks"
+    },
+    {
+      "type": "reads_table",
       "from": "file:backend/routers/progress.py",
       "to": "table:league_members"
     },
@@ -15541,6 +16621,11 @@
       "type": "writes_table",
       "from": "file:backend/routers/ocr.py",
       "to": "table:books"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/routers/page_marks.py",
+      "to": "table:page_marks"
     },
     {
       "type": "writes_table",

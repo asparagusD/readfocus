@@ -6,7 +6,7 @@
 const FALLBACK = {
   '--dur-1': '150ms', '--dur-2': '200ms', '--dur-3': '250ms',
   '--dur-4': '400ms', '--dur-5': '600ms', '--dur-6': '800ms',
-  '--stagger': '60ms',
+  '--dur-rack': '450ms', '--stagger': '60ms',
   '--ease-settle': 'cubic-bezier(0.22, 0.61, 0.36, 1)',
   '--ease-arrive': 'cubic-bezier(0.16, 1, 0.3, 1)',
   '--ease-breathe': 'cubic-bezier(0.45, 0, 0.55, 1)',
@@ -124,4 +124,32 @@ export const drawIn = {
       return prefersReducedMotion() ? { duration: 0 } : timing('--dur-6', '--ease-settle');
     },
   },
+};
+
+/**
+ * C37.7 (issue 26): the notebook's rack focus. The book recedes (scale 0.97, blur 8 px, a light dim) while the
+ * notebook slides in on a spring of --dur-rack; both are interruptible (a close midway reverses from where it is).
+ * Under reduced motion the notebook crossfades and the book blurs and dims in place: no transform. Opacity and
+ * the blur glide without overshoot; at rest the book has no filter (`transitionEnd`: Motion would leave blur(0px)),
+ * so nothing fixed inside it is re-parented.
+ */
+const spring = () => ({ type: 'spring', visualDuration: seconds('--dur-rack'), bounce: 0.12 });
+const glide = () => timing('--dur-rack', '--ease-settle');
+
+export const bookRecede = {
+  sharp: { scale: 1, opacity: 1, filter: 'blur(0px)', transitionEnd: { filter: 'none' },
+    get transition() { return { default: glide(), scale: { ...spring(), bounce: 0 } }; } },
+  receded: { scale: 0.97, opacity: 0.82, filter: 'blur(8px)',
+    get transition() { return { default: glide(), scale: { ...spring(), bounce: 0 } }; } },
+  blurred: { scale: 1, opacity: 0.82, filter: 'blur(8px)', get transition() { return glide(); } },
+};
+
+export const notebookSlide = {
+  away: { x: '12%', opacity: 0, get transition() { return { default: spring(), opacity: glide() }; } },
+  here: { x: 0, opacity: 1, get transition() { return { default: spring(), opacity: glide() }; } },
+};
+
+export const notebookFade = {
+  away: { x: 0, opacity: 0, get transition() { return glide(); } },
+  here: { x: 0, opacity: 1, get transition() { return glide(); } },
 };

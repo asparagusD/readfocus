@@ -3,7 +3,7 @@
 // hidden and visible, pause and resume, "Still with the book?" after ten quiet minutes, the 2 h 45 notice, the
 // 3-hour stop, and leaving with a session open (end or discard). Mocked API; the page's clock is Playwright's.
 // The end flow (ribbon, ready, quiz) is focus-end.spec.js (C23.6b).
-import { book, expect, openReader, settled, test } from './fixtures';
+import { book, clickTool, expect, openReader, settled, test } from './fixtures';
 
 const bar = (page) => page.getByRole('region', { name: 'Focus mode' });
 const kinds = (api) => api.focus.events.map((e) => e.kind);
@@ -12,7 +12,7 @@ const start = (page) => ({ source: 'outline', body_start: { kind: 'pdf', page, t
   anchor: { kind: 'pdf', page, quads: [[0, 0, 0, 0]], text: '' } } });
 
 async function focusOn(page) {
-  await page.getByRole('switch', { name: 'Focus mode' }).click();
+  await clickTool(page, page.getByRole('switch', { name: 'Focus mode' })); // C38.4b: in More tools on a phone
   await expect(bar(page)).toBeVisible();
 }
 
@@ -41,7 +41,7 @@ test('before the body start the stopwatch is locked and says why', async ({ page
   expect(calls(api, '/focus/start')).toEqual([]);
 });
 
-test('Notes and Steve open beside the book in focus mode, and the clock runs on (C31.1)', async ({ page, api }) => {
+test('the notebook and Steve open in focus mode, and the clock runs on (C31.1, C37.3)', async ({ page, api }) => {
   api.bodyStart = start(1);
   await openReader(page);
   await focusOn(page);
@@ -49,18 +49,22 @@ test('Notes and Steve open beside the book in focus mode, and the clock runs on 
   await bar(page).getByRole('button', { name: 'Start' }).click();
   await expect.poll(() => calls(api, '/focus/start').length).toBe(1);
   const notes = bar(page).getByRole('button', { name: 'Notes' });
-  await notes.click();
-  await expect(page.getByRole('complementary', { name: 'Notes' })).toBeVisible();
+  await notes.click(); // C37.3: the notebook, the clock still running behind it
+  const notebook = page.getByRole('dialog', { name: 'Notebook' });
+  await expect(notebook).toBeVisible();
   await expect(notes).toHaveAttribute('aria-expanded', 'true');
   api.focus.active = 30;
   await page.clock.runFor(30_000);
   await expect(bar(page).getByRole('timer')).toHaveText('00:30');
+  await notebook.getByRole('button', { name: 'Close notebook' }).click();
+  await expect(notes).toBeFocused(); // focus goes back to the button that opened it, as on the toolbar
   await expect(bar(page).getByRole('button', { name: 'Pause focus' })).toBeVisible();
-  await bar(page).getByRole('button', { name: 'Ask Steve' }).click();
+  const steve = bar(page).getByRole('button', { name: 'Ask Steve' });
+  await steve.click();
   await expect(page.getByRole('complementary', { name: /Steve/ })).toBeVisible();
   await page.getByRole('button', { name: 'Close Steve' }).click();
   await expect(page.getByRole('complementary')).toHaveCount(0);
-  await expect(notes).toBeFocused(); // focus goes back to the button that first opened the panel, as on the toolbar
+  await expect(steve).toBeFocused();
   expect(calls(api, '/focus/pause')).toEqual([]);
 });
 

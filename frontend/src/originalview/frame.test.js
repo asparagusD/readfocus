@@ -1,27 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  buildLocations, entryForPage, epubThemeCss, keyAction, locationAt, pdfFolio, pdfScale, spreadPages, stepSpread, timeAtProgress, zoomStep,
+  buildLocations, entryForPage, fontStep, keyAction, locationAt, locationPlace, pdfFolio, readerShortcut, pdfScale, timeAtProgress, zoomStep,
 } from './frame.js';
-
-test('PDF spreads: the first page alone on the right, then even pages on the left', () => {
-  assert.deepEqual(spreadPages(1, 10, true), [1]);
-  assert.deepEqual(spreadPages(2, 10, true), [2, 3]);
-  assert.deepEqual(spreadPages(3, 10, true), [2, 3]);
-  assert.deepEqual(spreadPages(10, 10, true), [10]);
-  assert.deepEqual(spreadPages(7, 10, false), [7]);
-  assert.deepEqual(spreadPages(44, 380, true), [44, 45]);
-});
-
-test('turning moves by a spread or a page and stops at the ends', () => {
-  assert.equal(stepSpread(1, 10, true, 1), 2);
-  assert.equal(stepSpread(2, 10, true, 1), 4);
-  assert.equal(stepSpread(3, 10, true, -1), 1);
-  assert.equal(stepSpread(10, 10, true, 1), 10);
-  assert.equal(stepSpread(1, 10, true, -1), 1);
-  assert.equal(stepSpread(5, 10, false, 1), 6);
-  assert.equal(stepSpread(10, 10, false, 1), 10);
-});
 
 test('zoom: fit-page and fit-width from the frame; percentages are of the printed size', () => {
   const page = { width: 612, height: 792 }; // US Letter in points
@@ -62,6 +43,65 @@ test('EPUB locations: stable page numbers from character counts, computed once',
   assert.deepEqual(buildLocations([], 1500), { starts: [], chars: [], total: 1, perPage: 1500 });
 });
 
+test("C38.9: Edge's shortcuts: find, next and previous, go to page, fit, zoom; the browser's zoom left alone", () => {
+  assert.equal(readerShortcut({ key: 'f', code: 'KeyF', ctrlKey: true }), 'find');
+  assert.equal(readerShortcut({ key: 'g', code: 'KeyG', ctrlKey: true }), 'find-next');
+  assert.equal(readerShortcut({ key: 'G', code: 'KeyG', ctrlKey: true, shiftKey: true }), 'find-prev');
+  assert.equal(readerShortcut({ key: 'g', code: 'KeyG', ctrlKey: true, altKey: true }), 'go-to-page');
+  assert.equal(readerShortcut({ key: '\\', code: 'Backslash', ctrlKey: true }), 'fit');
+  assert.equal(readerShortcut({ key: '=', code: 'Equal', ctrlKey: true }), 'zoom-in');
+  assert.equal(readerShortcut({ key: '+', code: 'Equal', ctrlKey: true, shiftKey: true }), 'zoom-in');
+  assert.equal(readerShortcut({ key: '+', code: 'NumpadAdd', metaKey: true }), 'zoom-in'); // Cmd on a Mac
+  assert.equal(readerShortcut({ key: '-', code: 'Minus', ctrlKey: true }), 'zoom-out');
+  assert.equal(readerShortcut({ key: '0', code: 'Digit0', ctrlKey: true }), null); // the browser's reset
+  assert.equal(readerShortcut({ key: 'g', code: 'KeyG' }), null); // no Ctrl: a plain key
+  assert.equal(readerShortcut({ key: 'f', code: 'KeyF', ctrlKey: true, altKey: true }), null);
+  assert.equal(readerShortcut({}), null);
+});
+
+test("C40.2c: Ctrl+Shift+U reads aloud, as Edge's; Ctrl+U alone stays the browser's", () => {
+  assert.equal(readerShortcut({ key: 'U', code: 'KeyU', ctrlKey: true, shiftKey: true }), 'read-aloud');
+  assert.equal(readerShortcut({ key: 'U', code: 'KeyU', metaKey: true, shiftKey: true }), 'read-aloud');
+  assert.equal(readerShortcut({ key: 'u', code: 'KeyU', ctrlKey: true }), null);
+  assert.equal(readerShortcut({ key: 'U', code: 'KeyU', shiftKey: true }), null);
+  assert.equal(readerShortcut({ key: 'U', code: 'KeyU', ctrlKey: true, shiftKey: true, altKey: true }), null);
+});
+
+test("C40.4c: Ctrl+S saves a copy and Ctrl+Shift+S saves it as, as Edge's", () => {
+  assert.equal(readerShortcut({ key: 's', code: 'KeyS', ctrlKey: true }), 'save');
+  assert.equal(readerShortcut({ key: 'S', code: 'KeyS', ctrlKey: true, shiftKey: true }), 'save-as');
+  assert.equal(readerShortcut({ key: 's', code: 'KeyS', metaKey: true }), 'save');
+  assert.equal(readerShortcut({ key: 's', code: 'KeyS' }), null);
+  assert.equal(readerShortcut({ key: 's', code: 'KeyS', ctrlKey: true, altKey: true }), null);
+});
+
+test('C40.5: Ctrl+P prints the book', () => {
+  assert.equal(readerShortcut({ key: 'p', code: 'KeyP', ctrlKey: true }), 'print');
+  assert.equal(readerShortcut({ key: 'p', code: 'KeyP', metaKey: true }), 'print');
+  assert.equal(readerShortcut({ key: 'P', code: 'KeyP', ctrlKey: true, shiftKey: true }), null); // the browser's own
+  assert.equal(readerShortcut({ key: 'p', code: 'KeyP' }), null);
+});
+
+test("C38.9: an EPUB's text size steps through its sizes and stops at the ends", () => {
+  assert.equal(fontStep(18, 1), 20);
+  assert.equal(fontStep(18, -1), 16);
+  assert.equal(fontStep(24, 1), 24);
+  assert.equal(fontStep(14, -1), 14);
+  assert.equal(fontStep(17, 1), 20); // a size not in the list steps from the default
+});
+
+test('C38.7b: a location page back to its section and character, for the page box', () => {
+  const locs = buildLocations([0, 3000, 1500, 4600], 1500);
+  assert.deepEqual(locationPlace(locs, 1), { index: 1, char: 0 }); // the empty first section is skipped
+  assert.deepEqual(locationPlace(locs, 2), { index: 1, char: 1500 });
+  assert.deepEqual(locationPlace(locs, 3), { index: 2, char: 0 });
+  assert.deepEqual(locationPlace(locs, 4), { index: 3, char: 0 });
+  assert.deepEqual(locationPlace(locs, 7), { index: 3, char: 4500 });
+  assert.deepEqual(locationPlace(locs, 99), { index: 3, char: 4500 }); // clamped to the last page
+  assert.equal(locationAt(locs, ...Object.values(locationPlace(locs, 5))), 5); // and back again
+  assert.equal(locationPlace(null, 2), null);
+});
+
 test('keys: arrows, Page Up/Down, Space and Shift+Space turn; Home, End and B', () => {
   assert.equal(keyAction({ key: 'ArrowRight' }), 'next');
   assert.equal(keyAction({ key: 'PageDown' }), 'next');
@@ -85,16 +125,6 @@ test('the contents entry for a page is the last one that starts on or before it'
   assert.equal(entryForPage(entries, 9)?.title, '1 Signals');
   assert.equal(entryForPage(entries, 30)?.title, '1.1 Noise');
   assert.equal(entryForPage([], 4), null);
-});
-
-test('lamplight CSS recolours text and backgrounds but never images, figures drawn in SVG, or video', () => {
-  const css = epubThemeCss({ background: '#231e19', foreground: '#eee5d5', link: '#eda77b', code: '#1a1612' });
-  assert.match(css, /background(-color)?:\s*#231e19 !important/);
-  assert.match(css, /color:\s*#eee5d5 !important/);
-  assert.match(css, /:not\(img\)/);
-  assert.match(css, /:not\(svg\)/);
-  assert.match(css, /:not\(svg \*\)/);
-  assert.doesNotMatch(css, /filter|invert/);
 });
 
 test('the turn happens when the leaf stands on edge: the time at half the rotation', () => {

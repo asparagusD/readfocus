@@ -96,7 +96,7 @@ def _focus_facts(user_id: str, session: dict, need: set[str]) -> Facts:
 
 
 def evaluate_badges(user_id: str, trigger_event: str, *, session: dict | None = None, passed: bool = False,
-                    book_id: str | None = None, anchor: dict | None = None) -> list[str]:
+                    book_id: str | None = None, anchor: dict | None = None, words: bool = False) -> list[str]:
     """Award the badges this event earns; the ids newly awarded, in catalogue order. A focus event counts only for
     a scored session whose quiz passed."""
     if trigger_event not in TRIGGERS:
@@ -110,8 +110,8 @@ def evaluate_badges(user_id: str, trigger_event: str, *, session: dict | None = 
     if trigger_event == "focus":
         facts = _focus_facts(user_id, session, need)
     elif trigger_event == "note":
-        facts = Facts(text_notes=_count("note_blocks", user_id=user_id, kind="text"),
-                      drawings=_count("note_blocks", user_id=user_id, kind="drawing"))
+        # C37.1: First note is earned by the save that writes words on a notebook page (`words`), not typed notes
+        facts = Facts(notebook_words=words, drawings=_count("note_blocks", user_id=user_id, kind="drawing"))
     elif trigger_event == "steve":
         facts = Facts(steve_answers=_count("steve_messages", user_id=user_id, role="steve"))
     else:

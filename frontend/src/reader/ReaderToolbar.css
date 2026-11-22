@@ -1,12 +1,14 @@
-/* Reader toolbar (C12.5a, handoff screen 06): a floating pill above the book. */
+/* Reader toolbar (C12.5a, handoff screen 06). C38.4b (issue 22): Edge's bar across the top, in three groups: the
+   book and Contents on the left, the book's own controls in the middle (centred while the sides fit), ReadFocus's
+   tools on the right. */
 .rf-toolbar {
+  position: relative;
+  z-index: var(--z-popover); /* the More tools panel opens over the book */
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  gap: var(--space-1) var(--space-2);
-  width: fit-content;
-  max-width: calc(100% - 2 * var(--space-4));
+  gap: var(--space-1) var(--space-3);
+  width: calc(100% - 2 * var(--space-4));
   margin-inline: auto;
   padding: var(--space-1) var(--space-3);
   border: var(--border-hair) solid var(--line);
@@ -18,7 +20,99 @@
     transform var(--dur-3) var(--ease-settle);
 }
 
-/* While reading it fades and lifts 8 px; keyboard focus inside brings it back (data-visible). */
+.rf-toolbar-start,
+.rf-toolbar-end {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  min-width: max-content;
+}
+
+.rf-toolbar-end { justify-content: flex-end; }
+.rf-toolbar-middle { display: flex; align-items: center; gap: var(--space-1); }
+/* C38.7b: Look up, Steve, Focus and the session's tools, in the bar while they fit, else a column in More tools. */
+.rf-toolbar-reading { display: flex; align-items: center; gap: var(--space-1) var(--space-2); }
+.rf-toolbar-more .rf-toolbar-reading { flex-direction: column; align-items: stretch; gap: var(--space-1); }
+
+/* "More tools": a panel under the bar, at the right; its tools with their names. */
+.rf-toolbar-more { display: none; }
+
+.rf-toolbar-more[data-open] {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-1);
+  min-width: 14rem;
+  padding: var(--space-2);
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-surface);
+  background: var(--surface);
+  box-shadow: var(--elevation-lift);
+}
+
+.rf-toolbar-more[data-open] .rf-tool { justify-content: flex-start; padding-inline: var(--space-3); }
+.rf-toolbar-more[data-open] .rf-switch { justify-content: space-between; }
+.rf-toolbar-more .rf-toolbar-session { flex-direction: column; align-items: stretch; }
+
+.rf-tool[aria-pressed="true"] { color: var(--accent-text); }
+
+/* C39.3 (issue 23): Edge's markup tools. A tool and its menu button side by side; the tool on is filled with the
+   accent's soft tint; the colour in use is a short bar under the icon, as Edge's. The menu opens under the tool. */
+.rf-markup { display: flex; align-items: center; gap: var(--space-1); }
+.rf-markup-tool { position: relative; display: inline-flex; align-items: center; }
+.rf-markup .rf-markup-toggle { padding-inline: var(--space-2) var(--space-1); }
+.rf-markup .rf-markup-toggle[aria-pressed="true"] { background: var(--accent-soft); }
+.rf-toolbar-end .rf-markup .rf-tool-label { display: none; } /* in the bar the icon speaks; More tools names it */
+/* C40.2: Read aloud beside the markup tools, in a row with them in the bar */
+.rf-toolbar-end > .rf-toolbar-markup { display: flex; align-items: center; gap: var(--space-1); }
+.rf-toolbar-end .rf-read-aloud-button .rf-tool-label { display: none; }
+.rf-read-aloud-button[aria-pressed="true"] { background: var(--accent-soft); }
+/* C40.4c: Save and Save as, icons in the bar, named in More tools */
+.rf-toolbar-file { display: flex; align-items: center; gap: var(--space-1); }
+.rf-toolbar-end > .rf-toolbar-file .rf-tool-label { display: none; }
+.rf-toolbar-more .rf-toolbar-file { flex-direction: column; align-items: stretch; }
+.rf-markup-icon { position: relative; display: inline-flex; }
+.rf-markup-swatch {
+  position: absolute;
+  inset-inline: 2px;
+  bottom: -5px;
+  block-size: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--c-dot);
+}
+.rf-markup-swatch[data-mark-colour] { background: var(--c-mark); box-shadow: 0 0 0 1px var(--line-2); } /* C39.4: Draw's
+   ink; the hairline keeps the near-black ink seen on Lamplight's dark bar (C39.6) */
+.rf-markup .rf-markup-menu-button { min-width: 24px; padding: 0 2px; color: var(--ink-2); }
+.rf-markup-menu {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  left: 0;
+  flex-direction: column;
+  align-items: stretch;
+}
+.rf-markup-colours { display: grid; grid-template-columns: repeat(5, auto); gap: var(--space-1); }
+/* C39.4: Draw's thickness, a slider in points under its colours. */
+.rf-markup-width {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-1) 0;
+  color: var(--ink-2);
+  font-size: var(--text-label);
+}
+.rf-markup-width input { flex: 1; min-inline-size: 6rem; accent-color: var(--accent); }
+.rf-markup-width output { min-inline-size: 3.5ch; color: var(--ink); font-variant-numeric: tabular-nums; text-align: end; }
+.rf-toolbar-more .rf-markup { flex-direction: column; align-items: stretch; }
+.rf-toolbar-more .rf-markup-toggle { flex: 1; }
+/* In More tools the menu takes its own row under the tool, in the flow, so it hides nothing below it. */
+.rf-toolbar-more .rf-markup-tool { flex-wrap: wrap; }
+.rf-toolbar-more .rf-markup-menu { position: static; flex-basis: 100%; margin-block: var(--space-1); box-shadow: none; }
+
+/* Unpinned, while reading it fades and lifts 8 px; keyboard focus inside brings it back (data-visible). */
 .rf-toolbar[data-visible="false"] {
   opacity: 0;
   transform: translateY(-8px);
@@ -32,7 +126,7 @@
 }
 
 .rf-toolbar-title {
-  max-width: 32ch;
+  max-width: 24ch; /* C38.4a: the page box and Page view too, on one row at 1440 */
   margin: 0;
   overflow: hidden;
   color: var(--ink-2);
@@ -97,24 +191,75 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* C38.4a (issue 22): Edge's page box, "n of N": the page shown, which the reader can type over. */
+.rf-page-box {
+  display: inline-flex;
+  white-space: nowrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding-inline: var(--space-2);
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  font-variant-numeric: tabular-nums;
+}
+
+.rf-page-input {
+  min-height: 32px;
+  padding: 0 var(--space-2);
+  border: var(--border-hair) solid var(--line-field);
+  border-radius: var(--radius-input);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  text-align: center;
+}
+
+.rf-page-input:focus-visible,
+.rf-select:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: var(--focus-ring-offset); }
+
+/* C38.4a: Edge's Page view, a plain menu of the three layouts. */
+.rf-select {
+  appearance: auto;
+  padding-inline: var(--space-2);
+  color: var(--ink);
+  font-size: var(--text-label);
+}
+
 /* Narrow screens: icons only, the title goes (the running head names the
    chapter). C13.9: the tools sit on one row as in the handoff's 375 frame
    (back, text size, Contents, Look up, theme: 44 px targets, no gaps), and
    the session's own controls take one row under them, instead of the pill
    wrapping into three rows over the page. */
 @media (width < 640px) {
+  .rf-page-total, /* C38.7b: the page box's "of N" (its label still says it), so an EPUB's controls fit one row */
   .rf-tool-label,
   .rf-tool-value,
   .rf-toolbar-title,
   .rf-toolbar-rule { display: none; }
 
+  /* C38.4b: two rows: back, Contents, Notes and More tools; under them the book's own controls. */
   .rf-toolbar {
     column-gap: 0;
-    max-width: calc(100% - 2 * var(--space-2));
+    width: calc(100% - 2 * var(--space-2));
     padding: 0 var(--space-1);
   }
 
+  .rf-toolbar-start,
+  .rf-toolbar-end { gap: 0; }
+
+  .rf-toolbar-middle {
+    order: 3;
+    flex-basis: 100%;
+    justify-content: center;
+    border-top: var(--border-hair) solid var(--line);
+  }
+
+  .rf-toolbar-more[data-open] .rf-tool-label { display: inline; } /* the names stay in the panel */
+
   .rf-switch { padding-inline: 6px; }
+  .rf-select { display: none; } /* C38.4a: two pages side by side do not fit a phone; one page a row */
 
   .rf-toolbar-session {
     flex-basis: 100%;

@@ -9,6 +9,8 @@ import { initialState, steveReducer } from './steveState';
  * panel opens. ask() streams one answer into the conversation; stop() ends it where it stands. Other chunks
  * (C20.8 block actions, C21 highlights) call ask() with a mode and what it explains.
  */
+export const PAGE_TEXT_MAX = 6_000; // C40.6: the backend's steve policy.PAGE_TEXT_MAX_CHARS
+
 export function useSteve(bookId, open) {
   const [state, dispatch] = useReducer(steveReducer, initialState);
   const controller = useRef(null);
@@ -32,13 +34,13 @@ export function useSteve(bookId, open) {
 
   useEffect(() => () => controller.current?.abort(), []);
 
-  const ask = useCallback(async ({ question, mode = 'ask', anchor, regionId, imagePngB64, label } = {}) => {
+  const ask = useCallback(async ({ question, mode = 'ask', anchor, regionId, imagePngB64, label, pageText } = {}) => {
     if (!question?.trim() || controller.current) return;
     if (view.current === 'loading' || view.current === 'consent') { // nothing is sent before consent (S2)
-      queued.current = { question, mode, anchor, regionId, imagePngB64, label };
+      queued.current = { question, mode, anchor, regionId, imagePngB64, label, pageText };
       return;
     }
-    last.current = { question, mode, anchor, regionId, imagePngB64, label };
+    last.current = { question, mode, anchor, regionId, imagePngB64, label, pageText };
     dispatch({ type: 'ask', question: question.trim(), label });
     const abort = new AbortController();
     controller.current = abort;
@@ -51,6 +53,7 @@ export function useSteve(bookId, open) {
         body: {
           book_id: bookId, question: question.trim(), mode, thread_id: thread.current ?? undefined,
           anchor: anchor ?? undefined, region_id: regionId ?? undefined, image_png_b64: imagePngB64 ?? undefined,
+          page_text: pageText ?? undefined, // C40.6: Summarize this page
           utc_offset_minutes: -new Date().getTimezoneOffset(),
         },
         onEvent: ({ name, data }) => dispatch(name === 'error' ? { type: 'stream_error', data } : { type: name, data }),

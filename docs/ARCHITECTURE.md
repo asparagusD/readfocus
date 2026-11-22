@@ -297,23 +297,57 @@ re-set the text in our own pages, is retired; `frontend/src/reader/` keeps
 only the parts the original view still uses (word cards, the contents
 drawer, the toolbar, the device file store and the place saver).
 
+C38 (issue 22) reads a book as Edge's PDF viewer does: scrolled on a desk, never
+recoloured (white in either theme), with no book frame (running head, turning leaf,
+edge zones, footer, closing page). `originalview/scroll.js` (pure) lays pages out from
+their sizes and gives the place: the pages in view and the main one, the page with
+most of the view, which the toolbar's page box shows and focus's F7 counts
+(`docs/FOCUS_RULES.md`, version 2026-11-21). The toolbar (`reader/ReaderToolbar.jsx`)
+keeps Edge's three groups and moves the tools that do not fit on one row into More
+tools (measured). Find (`originalview/find.js`, `useFind.js`, `FindBar.jsx`) searches
+every page's or section's text, not only what is drawn, and highlights with the CSS
+Custom Highlight API. The contents pane (`reader/ContentsDrawer.jsx`) docks beside the
+pages from 1024 px with Contents, Pages (`PagesPanel.jsx`, thumbnails drawn only near
+its view) and Annotations. Save my place (B) draws a small ribbon by the place
+(`PlaceMark.jsx`); focus mode's ribbon placer sets its bookmark on a page in view.
+
 - **PDF** (`originalview/pdf/`): PDF.js, loaded only when a PDF opens, with
-  its worker, fonts and decoders served from our origin (`pdfjs.js`); a
-  canvas and a text layer per page, a page cache, Lamplight recolouring,
-  and the region map's boxes for block actions. Scanned pages get a text
+  its worker, fonts and decoders served from our origin (`pdfjs.js`); the pages
+  laid out from their sizes and drawn only near the view (a ±2 page cache, a
+  canvas and a text layer each), one or two across (Page view), zoom kept on the
+  words at the top, and the region map's boxes for block actions. Scanned pages get a text
   layer from tesseract.js (English) running in the browser (`ocr.js`):
   math, code, table and figure boxes are painted out first, and the words
   go to the server once per page.
 - **EPUB** (`originalview/epub/`): foliate-js, vendored and reached only
-  through `engine.js`; sections sanitised (`sanitize.js`) and paginated two
-  pages from 1024 px, one below.
+  through `engine.js`; sections sanitised (`sanitize.js`) and scrolled (foliate's
+  scrolled flow, one 640 px column), a section opening the next as the reader
+  scrolls on past its end; its pages are counted from its characters (1,500 a
+  page) for the page box. `paginator.js` carries three marked ReadFocus changes
+  (its README); a fixed-layout EPUB still turns page by page.
+- **Read aloud** (C40, issue 24): the system's voices through the Web Speech API, nothing sent anywhere.
+  `reader/readAloud.js` turns a PDF page's text items (`pdfRuns`, region boxes unread) or an EPUB section's text
+  nodes (`epubRuns`, code, math, figures and tables unread) into sentences that map every spoken character back to
+  its text; `reader/speech.js` speaks one sentence at a time (pause cancels and resumes from the last word);
+  `reader/useReadAloud.js` reads page after page (an EPUB's next section is opened), marks the word with the CSS
+  highlight `rf-read-aloud` in its own document and keeps it in view unless the reader has just scrolled;
+  `ReadAloudBar` is Edge's bar. Ctrl+Shift+U, the toolbar, the focus bar and "Read aloud from here" start it. In
+  focus mode a speaking voice counts as input (FOCUS_RULES F6, 2026-11-22).
+- **Print, Save, Save as** (C40): `reader/saveCopy.js` writes the reader's highlights, underlines and comments
+  (Highlight, Underline with a Popup) and page marks (Ink, FreeText) into a copy of the PDF with pdf-lib, loaded only
+  then, each with its own appearance stream, placed through the inverse of PDF.js's viewport (crop box and
+  /Rotate). `reader/useSaveCopy.js` downloads it (Save, Ctrl+S), writes it where the file picker says (Save as,
+  Ctrl+Shift+S) or prints it from a hidden frame through the browser's PDF viewer (Print, Ctrl+P). An encrypted PDF
+  saves and prints as published; an EPUB saves its highlights as Markdown (`marksMarkdown.js`) and prints the
+  chapter on screen.
 - **The file** comes from a short-lived signed URL (`GET /books/{id}/file`)
   or, for a book kept on this device, from IndexedDB (`reader/fileStore.js`).
 - **The place** (C26.5): the book opens with `GET /books/{id}/open` at the
-  saved anchor (a new book at its first page), and every turn is saved with
-  `PUT /books/{id}/position` (`reader/usePlaceSaver.js`, one a second);
-  `originalview/place.js` compares places. The closing page is the end of
-  the book; today's reading and its range are gone.
+  saved anchor (a new book at its first page), and the place is saved as it
+  changes with `PUT /books/{id}/position` (`reader/usePlaceSaver.js`, one a
+  second); `originalview/place.js` compares places. The book's closing words sit
+  below a PDF's last page, or in a card at an EPUB's foot; today's reading and
+  its range are gone.
 
 ## Word lookup
 
@@ -347,13 +381,29 @@ lookup off: hover, tap or A ─► AnnotationChip: Ask Steve (explain_highlight)
 contents drawer ─► Annotations tab: reading order, colour filter, page, jump
 ```
 
+C39 (issue 23) adds Edge's markup tools (`docs/ANCHORS.md` A12):
+
+```
+toolbar ─► MarkupTools: Add text · Draw · Highlight · Erase (useMarkupTool: one on, Escape stops it)
+   Highlight ─► each settled selection highlighted at once (Edge's ten colours, the last one H's too)
+   Draw ─► InkLayer (SVG in page points) ─► usePageMarks: POST /books/{id}/marks ─► page_marks (036)
+   Erase ─► strokes and highlights a drag passes over: DELETE, one Undo per drag
+   Add text ─► TextBoxes: place, type, retype, move, restyle ─► POST / PATCH /marks/{id}
+right-click / menu key / Shift+F10 on a selection ─► SelectionMenu: Highlight, a colour, Underline, Add comment,
+   Add note, Ask Steve, Look up, Copy
+Add comment (menu, toolbar, chip) ─► CommentEditor ─► annotations.comment ─► CommentMarkers in the margin
+```
+
+`page_marks` is read 20 pages at a time round the pages in view, and only
+the pages drawn carry their strokes and boxes in the DOM.
+
 The book's DOM is never changed: the PDF layer is ours, and an EPUB section
 gets only `Highlight` objects and one `<style>` element. Steve's entry
 points hide while he is switched off, and a question waits for consent.
 
 ## Notes
 
-The notepad beside the book (C22; `docs/ANCHORS.md` A11). One `note_blocks`
+The notebook (C37, issues 25 and 26) and the notepad's list (C22; `docs/ANCHORS.md` A11). One `note_blocks`
 row (migration 027) per block: `kind` (text, drawing, equation, code,
 figure), `anchors` + A4 `position_start` / `position_end`, `scope`
 (selection or view), `content` checked per kind by
@@ -361,21 +411,32 @@ figure), `anchors` + A4 `position_start` / `position_end`, `scope`
 Excalidraw scene, fixed fields), optional `annotation_id` / `region_id`,
 `version` for If-Match, soft `deleted_at`. Images (crops, drawing thumbnails)
 live in the private `notes` bucket under `<user>/<book>/`, served by signed
-URLs.
+URLs. Since C37 a new note is always a `drawing`: one notebook per book, its
+pages the book's drawing rows in book order (no migration); `POST` refuses
+`text` (old text rows are still edited and deleted), and a page's app state
+keeps its `paper` (ruled, squared, plain). Typed notes become pages the first
+time the notebook opens, in the browser, each soft-deleted only after its
+page saves (`notes/moveTyped.js`).
 
 ```
-new note: Text / Drawing pills, N, selection toolbar Note ─► Reader.notePlace(): selection, else the pages shown
-from the book: block actions Add to notes (PDF crop + LaTeX, code, figure; EPUB on the device), highlight chip
-  Note (quote + annotation_id), Steve Save to notes (citations as text), a dragged equation or listing
-   └─► NotesContext.add ─► crop to POST /books/{id}/note-files ─► useNotes.create (shown at once) ─► POST /books/{id}/notes
+new page: Notes, N, selection toolbar Note ─► Reader.notePlace(): selection, else the pages shown
+from the book: N / selection Note (the passage), highlight chip Note (passage + annotation_id), Steve Save to
+  notes (his answer and sources), block actions (code, an equation's LaTeX as text; a figure, or an equation with
+  no LaTeX, as its crop uploaded to note-files)
+   └─► toNotebook: pageFor (the page started last in the place's chapter) else a new page there
+       ─► the notebook opens on it ─► DrawingEditor.add(lines) ─► saved like any edit
+the notebook: 70 % on the right, the book behind it scaled 0.97, blurred 8 px, dimmed and inert (a Motion spring,
+  interruptible; a crossfade under reduced motion; C37.8: the static blur costs one frame on the first opening)
 edits ─► autosave (800 ms, If-Match; 409 = "changed in another tab"; offline queue in IndexedDB, sent on reconnect)
 book ─► notepad: relocate ─► shownRange (A4) ─► sync.js: marks the notes on it, scrolls to the first,
   or offers "Jump to notes for this page" while writing; filter This page / This chapter / All
 notepad ─► book: a reference ─► Reader.goTo + flash (the passage pulses); margin markers (noteSpots) open notes
 ```
 
-TipTap and Excalidraw are lazy chunks loaded only when a note is edited or a
-drawing opened; the list draws notes with our own renderer (NoteDoc, KaTeX).
+Excalidraw is a lazy chunk loaded only when a page opens (its fonts from our
+own origin, AI off); pictures go to the `notes` bucket as WebP or PNG under
+256 KB. TipTap is gone (C37.4b): typed notes not yet moved and old block notes
+are drawn read-only in the list by our own renderer (NoteDoc, KaTeX).
 Nothing in the notepad calls Gemini; a PDF equation's LaTeX comes from
 `/steve/latex` only while Steve is on (a cached result costs no call).
 
@@ -386,7 +447,8 @@ that reaches Gemini is `backend/steve/provider.py`; the browser never calls
 Google.
 
 ```
-Ask Steve (panel question, a selection, Explain this equation / code / figure)
+Ask Steve (panel question, a selection, Explain this equation / code / figure; C40: Explain or Summarize a selection,
+Summarize this page)
    └─► POST /steve/ask (routers/steve_ask.py)
          consent at the current notice version? Steve on? no open test or quiz on the book (409)?
          └─► service.ask: cache (book, normalised question, context hash, model) ─► hit: no call
@@ -413,6 +475,9 @@ Ask Steve (panel question, a selection, Explain this equation / code / figure)
   while Steve is on and consented): one Gemini call with a crop of the
   page, cached by file, page and box in `equation_latex` (025), so each
   equation costs at most one call ever.
+- **Summarize** (C40, Copilot's place): `summarize_selection` on a selection; `summarize_page` sends the page's
+  own words (`page_text`, at most 6,000 characters: the server's text is in chunks that span pages), which the one
+  context builder bounds and marks as the selection.
 - Steve never writes a question, grades an answer or scores a session.
 
 ## Focus mode

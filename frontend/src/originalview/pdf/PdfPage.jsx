@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { spansFor } from './ocr';
 import { loadPdfjs } from './pdfjs';
 import { pdfBoxes } from '../../annotations/paint';
+import { InkLayer } from './InkLayer';
+import { TextBoxes } from './TextBoxes';
 import './pdf.css';
 
 /**
@@ -11,9 +13,11 @@ import './pdf.css';
  * C19.4: on a scanned page `ocr` (pdf/ocr.js) gives the words read by OCR, added to the same
  * text layer; while the page is first read a quiet note says so.
  * C21.3: `annotations` (this page and its neighbours') are drawn as boxes between the canvas and the text layer,
- * blended so ink keeps its colour: `darken` on a light page, `lighten` on a recoloured dark one (`dark`).
+ * blended (`darken`) so ink keeps its colour. C38.3: the page is always as published, so in Paper's colours.
+ * C39.4: `marks` (ink strokes near the view) are drawn over the text layer by InkLayer, which takes the pointer while
+ * Draw is on (`ink`).
  */
-export function PdfPage({ cache, pageNumber, label, onShown, side = 'single', ocr = null, annotations = null, dark = false }) {
+export function PdfPage({ cache, pageNumber, label, onShown, side = 'single', ocr = null, annotations = null, marks = null, ink = null, eraser = null, textBoxes = null }) {
   const [reading, setReading] = useState(false);
   const root = useRef(null);
   const sheet = useRef(null);
@@ -34,7 +38,11 @@ export function PdfPage({ cache, pageNumber, label, onShown, side = 'single', oc
       sheet.current.replaceChildren(canvas);
       text.current.replaceChildren();
       layer = new pdfjs.TextLayer({ textContentSource: textContent, container: text.current, viewport });
-      return layer.render().then(() => !gone && shown.current?.(pageNumber));
+      return layer.render().then(() => {
+        if (gone) return;
+        layer.textDivs.forEach((el, i) => { el.dataset.item = i; }); // C40.2: read aloud finds a word's span by its item
+        shown.current?.(pageNumber);
+      });
     }).catch((error) => {
       if (!gone && error?.name !== 'AbortException') console.warn(`PDF page ${pageNumber} failed`, error);
     });
@@ -77,8 +85,8 @@ export function PdfPage({ cache, pageNumber, label, onShown, side = 'single', oc
       style={size ? { width: size.width, height: size.height } : undefined}>
       <div ref={sheet} className="rf-pdf-page__canvas" />
       {size && annotations?.length > 0 && (
-        // A light page takes Paper's colours even in Lamplight (original colours): the layer says which.
-        <div className="rf-pdf-annos" data-theme={dark ? undefined : 'paper'} data-dark={dark || undefined} aria-hidden="true">
+        // The page is as published, light, so it takes Paper's highlight colours in Lamplight too.
+        <div className="rf-pdf-annos" data-theme="paper" aria-hidden="true">
           {pdfBoxes(annotations, pageNumber, size.scale).map((box) => (
             <span key={box.key} className="rf-anno" data-id={box.id} data-style={box.style} data-colour={box.color}
               style={{ left: box.left, top: box.top, width: box.width, height: box.height }} />
@@ -86,6 +94,16 @@ export function PdfPage({ cache, pageNumber, label, onShown, side = 'single', oc
         </div>
       )}
       <div ref={text} className="textLayer" />
+      {size && (marks || ink || eraser) && (
+        <InkLayer page={pageNumber} size={size} ink={ink} eraser={eraser}
+          marks={(marks ?? []).filter((m) => m.page === pageNumber && m.kind === 'ink')}
+          highlights={(annotations ?? []).filter((a) => a.anchors?.some((x) => x.kind === 'pdf' && x.page === pageNumber))} />
+      )}
+      {size && (marks || textBoxes) && (
+        // C39.6: text boxes over the ink, taking the pointer while Add text is on.
+        <TextBoxes page={pageNumber} size={size} text={textBoxes}
+          boxes={(marks ?? []).filter((m) => m.page === pageNumber && m.kind === 'text')} />
+      )}
       {reading && <p className="rf-pdf-ocr" role="status">Making this page selectable…</p>}
     </div>
   );

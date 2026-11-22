@@ -2,7 +2,7 @@
 // own origin; the words are posted, come back as a text layer, and word lookup works on them. A fully
 // scanned book with no chunks opens pages-only and reads every page in turn. The API is mocked
 // (fixtures.js keeps posted words, as the server would after cleaning).
-import { test, expect, BOOKS, openReader, wordPoint } from './fixtures.js';
+import { BOOKS, expect, openReader, reveal, test, wordPoint } from './fixtures.js';
 
 const scanned = { file: 'scanned.pdf', type: 'application/pdf', format: 'pdf', scanned: [1, 2], today: [0],
   chunks: ['Text that no page holds, so today runs from the start of the book.'] };
@@ -52,7 +52,8 @@ test.describe('a fully scanned book', () => {
     page.on('request', (r) => { if (r.url().endsWith('/ocr/worker.min.js')) engineAsked ??= Date.now(); });
     await openReader(page);
     await expect(page.getByRole('button', { name: 'Done reading' })).toHaveCount(0);
-    await expect(page.getByText(/^Reading this scan: [0-2] of 2 pages$/)).toBeVisible();
+    // C39.4b: with Draw and Highlight in the bar the session's status is in More tools at 1440 (C39.3 decision).
+    await expect(await reveal(page, page.getByText(/^Reading this scan: [0-2] of 2 pages$/))).toBeVisible();
     if (shots) await page.screenshot({ path: `${shots}/ocr-pages-only-${page.viewportSize().width}.png` });
     await expect(page.getByText('Preparing the book…')).toBeVisible({ timeout: 140_000 });
     expect(api.ocrPosts.map((p) => p.page).sort()).toEqual([1, 2]);

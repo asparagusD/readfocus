@@ -24,7 +24,8 @@ container numbers are Docker at 0.1 CPU and 512 MB, the Render Free size.
 | `GET /dashboard` | 193 ms p50 | C9.5 |
 | Word lookup, cached in process / in `term_lookups` | 2.7 ms / 96 ms p50 | C12.6 |
 | Hover to word card, cached | 356-366 ms (350 ms of it is the hover intent) | C12.10 |
-| Page turns | 75 fps, worst frame 13.7-14.0 ms; 74.3 fps at 4x CPU slowdown | C12.10 |
+| Scrolling a 300-page PDF (wheel, Page Down) | 75 fps, worst frame 13.5-13.7 ms; 69.3-72.3 fps at 4x CPU slowdown; at most 5 pages drawn | C38.10 (page turns until then: C12.10) |
+| The same with 1,500 marks and 300 highlights | 75 fps; 67.5-72.4 fps at 4x CPU; at most 20 strokes in the page; heap 10.9-11.0 MB at the end | C39.9 |
 | Lighthouse, mobile performance | 81-90 across eight pages; accessibility 95-100 | C13 close |
 | Grader agreement with 34 labelled answers | 26 of 34 (76.5%) within 0.25; leave-one-out after a 3,060-setting search: 26 | C15.3 |
 | Full reading journey in a browser, local stack | 30.0 s end to end | C15 |
@@ -1864,3 +1865,182 @@ Command: `docker run --rm --network none --memory=512m --memory-swap=512m --cpus
 -e PYTHONPATH=/repo -e SUPABASE_URL=http://127.0.0.1:9 -e SUPABASE_SERVICE_KEY=offline -e EMBED_PRELOAD=0
 -e INGEST_SWEEP=0 readfocus-c25-measure python scripts/dev/measure_c36.py --book
 samples/technical/interactive-linear-algebra.pdf --page 1|200`.
+
+## C37: the notebook over a long book (2026-11-20, issue 26)
+
+`e2e/notebook-frame-rate.spec.js` (the `frame-rate` Playwright project, no trace recorder), headless Microsoft Edge
+on this machine against the production build (`vite preview`), 1440 x 900, API mocked. The book is a 300-page PDF
+built in memory (`bigPdf.js`, 46 lines of Helvetica text a page, 1.2 MB) served the way Storage does (206 ranges,
+no Accept-Ranges). Frames sampled with requestAnimationFrame while the notebook opens (800 ms), while a freehand
+stroke is drawn on a new page (60 moves over about 2 s) with the book blurred behind it, while the same stroke is
+drawn with the blur taken off (the control), and while it closes (800 ms); then all of it again under CDP
+`Emulation.setCPUThrottlingRate` 4 (the second opening). JS heap from CDP `Performance.getMetrics` after
+`HeapProfiler.collectGarbage`. Three runs; the ranges cover all three.
+
+| Measure | 1x CPU | 4x CPU |
+|---|---|---|
+| Opening: fps, worst frame (frames over 33 ms) | 64.6-65.8 fps, 80.1-93.4 ms (1) | 70.5-71.6 fps, 39.8-40.0 ms (1) |
+| Drawing over the blurred book | 75 fps, 13.6 ms (0) | 75 fps, 13.6-13.7 ms (0) |
+| Drawing with the blur off (control) | 75 fps, 13.6 ms (0) | 75 fps, 13.6-13.7 ms (0) |
+| Closing | 73.7-73.8 fps, 26.7-26.8 ms (0) | 72.7-72.8 fps, 39.9-40.1 ms (1) |
+
+| JS heap (DOM nodes) | Value |
+|---|---|
+| Book open, notebook never opened | 5.4 MB (405) |
+| Notebook open on a page (Excalidraw loaded) | 9.5 MB (757) |
+| Notebook closed again | 9.6 MB (449) |
+
+Where the long frame on the first opening comes from: the same bench with the book's filter forced to `none` by
+a stylesheet (a throwaway copy of the spec, two runs) gives a worst opening frame of 40.0-53.2 ms at 1x (40 ms at
+4x) and a worst closing frame of 13.6 ms at 1x. So the notebook's first mount costs about 40 ms, the blur's first
+rasterisation of the book about 40 ms more, once, at the start of the first opening; later openings are 40 ms at
+worst even at 4x CPU. Once the blur is in place it costs nothing measurable: a stroke draws at the browser's 75 fps
+pace with and without it (Chromium keeps the filtered book as a layer while it does not change).
+
+Decision (C37.8): the static blur stays. A pre-blurred snapshot would have to rasterise the book into an image
+first, which costs more than the one frame it would save.
+
+The heap stays 4.2 MB higher after the notebook closes: Excalidraw's code stays loaded once used; the DOM goes back
+to 449 nodes (44 more than before, with one new page in the book; not traced further). PDF.js parses in its
+worker, whose heap is not in these numbers, and canvas backing stores (the book's pages, Excalidraw's canvases) are
+not in the JS heap either. Headless Edge paces frames at about 75 a second here, so 75 fps is the ceiling, not a
+measured limit. Not measured: a real GPU in a headed browser, a phone, Firefox, Safari.
+
+Command: `npx playwright test e2e/notebook-frame-rate.spec.js --project=frame-rate` in `frontend/` (runs in the
+standard `npm run test:e2e` too); results in `frontend/test-results/notebook-benchmarks.json` (ignored).
+
+## C38: scrolling, as Edge reads (2026-11-21, issue 22)
+
+`e2e/scroll-frame-rate.spec.js` (the `frame-rate` Playwright project, no trace recorder), headless Microsoft Edge on
+this machine against the production build (`vite preview`), 1440 x 900, fit page, API mocked. It replaces the
+page-turn bench of C12.10 (a book no longer turns). The PDF is the 300-page book of C37 (`bigPdf.js`, 46 lines of
+text a page, 1.2 MB) served the way Storage does. Frames sampled with requestAnimationFrame while the wheel scrolls
+180 notches of 100 px a frame apart (about 20 pages), and while Page Down is pressed ten times 150 ms apart; then both
+again under CDP `Emulation.setCPUThrottlingRate` 4. The pages drawn are the canvases in the book; the JS heap from
+CDP `Performance.getMetrics` after `HeapProfiler.collectGarbage`, when the book opens, after about 60 pages
+scrolled (page 65 in view), and after End. Then the EPUB fixture (`reflow.epub`) scrolled by 120 notches through its
+sections (overscroll opens the next). Three runs; the ranges cover all three.
+
+| Measure | 1x CPU | 4x CPU |
+|---|---|---|
+| PDF, wheel: fps, worst frame (frames over 33 ms) | 75 fps, 13.6-13.7 ms (0) | 71.9-72.3 fps, 26.8-26.9 ms (0) |
+| PDF, Page Down a page at a time | 75 fps, 13.5-13.6 ms (0) | 69.3 fps, 26.8-26.9 ms (0) |
+| EPUB, wheel through three sections | 75 fps, 13.6-13.8 ms (0) | not run |
+
+| PDF | Value |
+|---|---|
+| Pages drawn after 60 pages scrolled / at the end | 5 / 3 (the pages in view and two either side; the last page has none after it) |
+| JS heap (DOM nodes): opened | 5.6 MB (742) |
+| after 60 pages scrolled | 7.3 MB (1,035) |
+| at the end | 7.3 MB (751) |
+
+Scrolling 300 pages costs nothing that grows with the book: only the pages near the view are drawn (C38.2's ±2 page
+cache), and the heap stays at 7.3 MB from page 65 to the end (each page's text, kept once read, is in it; canvas
+backing stores and PDF.js's worker are not). As for C37, headless Edge paces frames at about 75 a second here, so
+75 fps is the ceiling, not a measured limit. Not measured: a real GPU in a headed browser, a phone, Firefox, Safari,
+find's search over all 300 pages (C38.5a reads each page's text once, in the worker).
+
+Command: `npx playwright test e2e/scroll-frame-rate.spec.js --project=frame-rate` in `frontend/` (runs in the
+standard `npm run test:e2e` too); results in `frontend/test-results/scroll-benchmarks-pdf.json` and `-epub.json`
+(ignored).
+
+## C39: scrolling a marked-up book (2026-11-22, issue 23)
+
+`e2e/marks-frame-rate.spec.js` (the `frame-rate` project), as C38.10's bench: headless Microsoft Edge on this
+machine, the production build, 1440 x 900, fit page, API mocked, the same 300-page PDF served like Storage. Every
+page carries four ink strokes of 150 points across it and a text box (1,500 marks), and a highlight, with a comment on
+every tenth. The wheel scrolls 180 notches (about 20 pages) and Page Down steps ten pages, at 1x and 4x CPU; the
+strokes and boxes in the page are counted when it opens, after about 60 pages (page 65 in view) and at the end;
+the JS heap from CDP after a collection. Three runs; the ranges cover all three.
+
+| Measure | 1x CPU | 4x CPU |
+|---|---|---|
+| Wheel: fps, worst frame (frames over 33 ms) | 75 fps, 13.6-13.8 ms (0) | 71.7-72.4 fps, 26.8-27.0 ms (0) |
+| Page Down a page at a time | 75 fps, 13.5-13.7 ms (0) | 67.5-70.4 fps, 26.9-40.1 ms (0-2) |
+
+| Marked-up PDF | Value |
+|---|---|
+| Strokes / boxes in the page: opened, after 60 pages, at the end | 12 / 3, 20 / 5, 12 / 3 (the pages drawn only) |
+| 20-page blocks of marks asked for | 6 of 15 (the blocks round the pages passed) |
+| JS heap (DOM nodes): opened | 6.6-6.8 MB (820) |
+| after 60 pages scrolled | 10.6 MB (1,133) |
+| at the end | 10.9-11.0 MB (829) |
+
+The marks cost no frames: scrolling is at the same 75 fps ceiling as C38's unmarked book, and at 4x CPU within a
+frame or two of it (one run's Page Down had two frames of 40 ms at 4x). Only the pages drawn put their strokes and boxes in the page. The heap at the end is 3.6-3.7 MB above C38's
+(7.3 MB): the marks of the blocks loaded are kept for the visit (about 600 strokes of 150 points here); a book marked
+this heavily and read to its end would keep all 1,500. Not measured: drawing a stroke's frame rate, a real pen, a
+phone.
+
+Command: `npx playwright test e2e/marks-frame-rate.spec.js --project=frame-rate` in `frontend/` (runs in the
+standard `npm run test:e2e` too); result in `frontend/test-results/marks-benchmarks.json` (ignored).
+
+## C40.4: pdf-lib for a copy with marks (2026-11-22, issue 24, D2)
+
+pdf-lib 1.17.1 is a frontend dependency (the backend is untouched, so its RSS on Render is not changed). It is
+loaded only when a copy is made: the build puts it in one lazy chunk, and the initial route stays 182.5 KB gzipped.
+
+| Measure | Value |
+|---|---|
+| pdf-lib's minified build, gzipped (zlib, node) | 201.8 KB |
+| Its lazy chunk in our build, gzipped (`check:bundle`) | 206.2 KB |
+| Initial route JS, gzipped | 182.5 KB (unchanged) |
+| Save on C39.9's 300-page PDF (1.2 MB) with 1,500 marks (1,200 strokes of 150 points, 300 text boxes) and 300 highlights (30 with comments): click to download | 2.5 s |
+| JS heap (CDP): before, peak while saving (sampled every 50 ms), after a collection | 7.0 MB, 176.2 MB, 9.8 MB |
+| The copy | 6.5 MB (the strokes' outlines and their points) |
+
+The peak is pdf-lib holding the whole file as objects while it writes; it is given back once the copy is
+downloaded. A phone with a book this heavily marked may be slow to save. One run, Edge on this machine, 1440 x 900,
+1x CPU. Command: a throwaway Playwright test using `e2e/marks-frame-rate.spec.js`'s book and marks (the Save is
+clicked and the heap sampled through CDP); C40.7 keeps it as a bench.
+
+## C40.7: read aloud and Save on a marked book (2026-11-22, issue 24)
+
+C39.9's book: a 300-page PDF (1.2 MB) with 1,500 marks (four 150-point strokes and a text box a page) and 300
+highlights (a comment on every tenth). Read aloud: a fake voice speaks a word every 5 ms (headless Edge has no voices)
+while the view follows it, 8 s at 1x CPU, then 8 s at 4x. Save: click to download, the frames drawn meanwhile, the
+heap sampled every 50 ms through CDP. Three runs and the full e2e run; the ranges cover all four. Edge on this machine, 1440 x 900.
+
+| Read aloud | 1x CPU | 4x CPU |
+|---|---|---|
+| fps, worst frame (frames over 33 ms) | 75 fps, 13.6-13.8 ms (0) | 74.7 fps, 26.7-26.9 ms (0) |
+
+| Read aloud | Value |
+|---|---|
+| Sentences spoken in 16 s, the page reached | 165-173, page 4 (the view followed) |
+| JS heap: opened, while reading | 6.8 MB, 8.3 MB |
+
+| Save a copy | Value |
+|---|---|
+| Click to download | 2.41-2.42 s |
+| Frames meanwhile: fps, worst frame (over 33 ms) | 48.7-49.3 fps, 760-774 ms (2) |
+| JS heap: before, peak, after a collection | 6.8-7.0 MB, 170.1-179.8 MB, 9.8 MB |
+| The copy | 6.5 MB |
+
+Reading aloud costs no frames: the word mark and the view following it stay at the 75 fps ceiling, and at 4x CPU
+within a frame of it. Saving holds the page still for one frame of about 0.77 s while pdf-lib writes the copy on the
+main thread (the rest of the 2.4 s is fetching the marks and the file); a Web Worker could take that off the page
+later. A real voice was tried by hand (below), not measured.
+
+Checked by hand, 2026-11-22, Edge started by Playwright with a window (its profile has three local voices: David,
+Mark, Zira; the online natural voices come with a reader's own Edge profile, not tried): word boundaries marked
+"Line", "1", "page", "1", "the", "threw" in turn; Pause stopped the voice and kept "threw"; Play went on from "threw".
+Not checked here: Edge's own Read aloud on Ctrl+Shift+U (Playwright's keys reach the page, not the browser), and a
+real print dialog.
+
+Command: `npx playwright test e2e/read-aloud-save-frame-rate.spec.js --project=frame-rate` in `frontend/` (runs in
+the standard `npm run test:e2e` too); result in `frontend/test-results/read-aloud-save-benchmarks.json` (ignored).
+
+### C40.8: Save in a worker (2026-11-22)
+
+pdf-lib writes the copy in a module worker (`reader/saveCopy.worker.js`): the same bench, three runs.
+
+| Save a copy | C40.7 (main thread) | C40.8 (worker) |
+|---|---|---|
+| Click to download | 2.41-2.42 s | 2.40 s |
+| Frames meanwhile: fps, worst frame (over 33 ms) | 48.7-49.3 fps, 760-774 ms (2) | 75 fps, 13.6-13.7 ms (0) |
+| The page's JS heap: before, peak, after | 6.8-7.0, 170.1-179.8, 9.8 MB | 7.0, 16.6-19.4, 7.6 MB |
+
+The page no longer stands still while a copy is written. Its heap peak falls because pdf-lib's objects now live in the
+worker, which this CDP measure does not count: the machine still needs about the same memory while saving, for the
+2.4 s it takes, and gives it back when the worker is closed. Print uses the same copy, so it gains the same.

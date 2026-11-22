@@ -342,9 +342,13 @@ OCR_FULL_PAGE_FIGURE = 0.8
 
 # --- Annotations (backend/routers/annotations.py, C21.1; docs/ANCHORS.md) -----
 
-# The handoff's highlight palette (tokens --hl-<name>) and the two styles; migration 026 checks the same lists.
-ANNOTATION_COLORS = ("honey", "sage", "sky", "rose", "lilac")
+# The highlight palette (tokens --hl-<name>) and the two styles; migration 026 checks the styles. C39.1 (issue 23,
+# D3): Edge's set, checked by migration 036: the handoff's five (yellow, green, light blue, pink and our lilac) stay
+# first, then red and the deeper shades of yellow, green, blue and pink.
+ANNOTATION_COLORS = ("honey", "sage", "sky", "rose", "lilac", "poppy", "amber", "fern", "ocean", "berry")
 ANNOTATION_STYLES = ("highlight", "underline")
+# C39.1 (D1): a comment on a highlight, plain text, as Edge's "Add comment"; migration 036 checks the same length.
+ANNOTATION_COMMENT_MAX = 1_000
 # Anchors one annotation may hold: one per PDF page or EPUB spine item it crosses (A2).
 ANNOTATION_ANCHORS_MAX = 16
 # Characters of text kept with an annotation (A1 text, whitespace collapsed).
@@ -352,10 +356,30 @@ ANNOTATION_TEXT_MAX = 5_000
 # Annotations one list request returns, in reading order.
 ANNOTATIONS_LIST_MAX = 2_000
 
+# --- Page marks (backend/routers/page_marks.py, C39.1, issue 23; docs/ANCHORS.md A12) ------------
+
+# Ink strokes and text boxes on a PDF page (D2: PDFs only); migration 036 checks the kinds, colours and data size.
+MARK_KINDS = ("ink", "text")
+# Ink and text colours (tokens --mark-<name>, C39.2): a dark ink, then strong shades that read on a white page.
+MARK_COLORS = ("ink", "poppy", "amber", "fern", "ocean", "berry", "plum")
+MARK_DATA_MAX_BYTES = 65_536  # one mark's data as JSON, also a check in 036
+# Every coordinate is in PDF points from the page's top-left (A1); A4's position holds while y < 10,000.
+MARK_COORD_MAX = 10_000
+MARK_STROKE_POINTS_MAX = 2_000  # points in one stroke (a long scribble at 60 Hz is about 30 s)
+MARK_STROKE_WIDTH = (0.5, 24.0)  # an ink stroke's width in points, Edge's slider's range and more
+MARK_TEXT_MAX = 2_000  # characters in one text box
+MARK_TEXT_SIZE = (6.0, 72.0)  # a text box's font size in points
+MARK_TEXT_WIDTH = (24.0, 2_000.0)  # a text box's width in points
+MARKS_LIST_MAX = 5_000  # marks one list request returns, in reading order
+
 # --- Note blocks (backend/routers/notes.py, C22.1; docs/ANCHORS.md) -------------
 
 # Block kinds and anchoring scopes (a selection, or the pages shown); migration 027 checks the same lists.
 NOTE_KINDS = ("text", "drawing", "equation", "code", "figure")
+# C37.1 (issue 25): typed notes are no longer made; every note goes into the notebook. Old text rows stay editable.
+NEW_NOTE_KINDS = ("drawing", "equation", "code", "figure")
+# C37.1 (issue 26): a notebook page's paper, kept in its scene's app state; ruled is the default.
+NOTE_PAPERS = ("ruled", "squared", "plain")
 NOTE_SCOPES = ("selection", "view")
 # One block's content as JSON, also a check in 027 (octet_length of content::text).
 NOTE_CONTENT_MAX_BYTES = 262_144
@@ -424,10 +448,12 @@ FOCUS_STATUSES = ("active", "paused", "awaiting_quiz", "scored", "abandoned")
 FOCUS_OPEN_STATUSES = ("active", "paused")
 FOCUS_EVENT_KINDS = ("start", "heartbeat", "page_turn", "hidden", "visible", "idle_prompt", "idle_confirm",
                      "pause", "resume", "end")
-FOCUS_PAGE_KEY_MAX = 64  # focus_events.page_key: "p12" or "s3:4"
+FOCUS_PAGE_KEY_MAX = 64  # focus_events.page_key: "p12" (a PDF page), "l42" (an EPUB's counted page, C38.1) or "s3:4"
 # Stored on each session at its start and again when it is scored, so the row names the rules that scored it.
 # A date, with ".n" for a later revision the same day. 2026-11-15.2: the quiz bonus is capped at the time points.
-FOCUS_RULES_VERSION = "2026-11-15.2"
+# 2026-11-21: F7's page is the page most in view of a scrolled book (C38.8, issue 22 D3); the scoring is unchanged.
+# 2026-11-22: F6: listening to read aloud is input (C40.3, issue 24): heartbeats carry had_input while it speaks.
+FOCUS_RULES_VERSION = "2026-11-22"
 
 # --- XP, the daily goal and streaks (C24.1, docs/GAMIFICATION.md G4-G9) ---
 XP_SOURCES = ("focus", "badge", "adjustment")  # xp_events.source (031 checks the same values); only focus earns in C24

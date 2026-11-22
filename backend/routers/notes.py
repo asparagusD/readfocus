@@ -13,14 +13,22 @@ import binascii
 import uuid
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, Response
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    Header,
+    HTTPException,
+    Query,
+    Response,
+)
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from backend.agents import policy
 from backend.dependencies import get_current_user
 from backend.services.anchor_checks import MAX_POSITION, Anchor, check_anchors
 from backend.services.book_purge import live
-from backend.services.note_content import check_content, owned_path
+from backend.services.note_content import check_content, has_words, owned_path
 from backend.services.supabase_client import supabase
 from backend.xp import badge_award
 
@@ -169,8 +177,10 @@ def list_notes(book_id: str, start: float | None = Query(default=None, alias="fr
 @router.post("/books/{book_id}/notes", status_code=201)
 def create_note(book_id: str, req: NewNote, response: Response, user_id: str = Depends(get_current_user)):
     _owned(book_id, user_id)
-    if req.kind not in policy.NOTE_KINDS:
-        raise _refuse(f"kind is one of {policy.NOTE_KINDS}")
+    if req.kind == "text":  # C37.1 (issue 25)
+        raise _refuse("Typed notes are no longer made: write in the notebook instead")
+    if req.kind not in policy.NEW_NOTE_KINDS:
+        raise _refuse(f"kind is one of {policy.NEW_NOTE_KINDS}")
     row = {"user_id": user_id, "book_id": book_id, "kind": req.kind, "scope": req.scope,
            "anchors": [a.model_dump() for a in req.anchors], "position_start": req.position_start,
            "position_end": req.position_end, "content": _content(req.kind, req.content, user_id, book_id),
@@ -178,13 +188,14 @@ def create_note(book_id: str, req: NewNote, response: Response, user_id: str = D
            "orphaned": False, "version": 1, "deleted_at": None, "created_at": datetime.now(UTC).isoformat()}
     _check_links(row, user_id, book_id)
     saved = supabase.table("note_blocks").insert(row).execute().data[0]
-    badge_award.check_quietly(user_id, "note")  # C24.2: First note, First drawing
+    # C24.2: First note, First drawing; since C37.1 First note is words on a notebook page
+    badge_award.check_quietly(user_id, "note", words=has_words(req.kind, row["content"]))
     return _with_etag(response, saved)
 
 
 @router.patch("/notes/{note_id}")
-def update_note(note_id: str, req: NoteChange, response: Response, user_id: str = Depends(get_current_user),
-                if_match: str | None = Header(default=None)):
+def update_note(note_id: str, req: NoteChange, response: Response, background: BackgroundTasks,
+                user_id: str = Depends(get_current_user), if_match: str | None = Header(default=None)):
     change = req.model_dump(exclude_none=True)
     if not change:
         raise _refuse("Give content, anchors with positions, a thumbnail or orphaned")
@@ -203,6 +214,8 @@ def update_note(note_id: str, req: NoteChange, response: Response, user_id: str 
         current = _live(note_id, user_id)["version"]
         raise HTTPException(status_code=409, detail={"message": "This note changed since you opened it",
                                                      "version": current})
+    if "content" in change and has_words(note["kind"], change["content"]):  # C37.1: words written on a page
+        background.add_task(badge_award.check_quietly, user_id, "note", words=True)
     return _with_etag(response, rows[0])
 
 

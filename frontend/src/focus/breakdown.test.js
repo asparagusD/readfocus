@@ -4,7 +4,7 @@ import { breakdown, minutesOf } from './breakdown.js';
 
 const LINES = [
   { code: 'counted', label: 'Focused reading', seconds: 3120, points: 520 },
-  { code: 'page_cap', label: 'Time on one page beyond 30 minutes without turning it', seconds: 600, points: 0 },
+  { code: 'page_cap', label: 'Time on one page beyond 30 minutes without moving to another page', seconds: 600, points: 0 },
   { code: 'quiz_bonus', label: 'Quiz: 2 of 3 correct', points: 40 },
 ];
 
@@ -20,7 +20,7 @@ test('a passed quiz: focused time, the time not counted, the bonus and the total
   assert.equal(out.passed, true);
   assert.deepEqual(out.rows.map((r) => [r.title, r.detail, r.value, r.kind]), [
     ['Focused reading', '52 minutes', '+520', 'counted'],
-    ['Not counted', 'Time on one page beyond 30 minutes without turning it · 10 minutes', '—', 'void'],
+    ['Not counted', 'Time on one page beyond 30 minutes without moving to another page · 10 minutes', '—', 'void'],
     ['Quiz bonus', '2 of 3 right · 67%', '+40', 'counted'],
     ['Total', 'Points from this session', '+560', 'total'],
   ]);

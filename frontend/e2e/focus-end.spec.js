@@ -2,7 +2,7 @@
 // page, dragging the ribbon, or the arrow keys and Enter), turning pages first if need be; then "Ready for your
 // questions?", and the quiz on the test's own screen with no clock and no Steve, then the results. The 3-hour
 // stop and leaving focus mode take the same path. Mocked API.
-import { book, expect, openReader, settled, test } from './fixtures';
+import { clickTool, expect, openReader, test, twoPagesInView } from './fixtures';
 
 const bar = (page) => page.getByRole('region', { name: 'Focus mode' });
 const placing = (page) => page.getByRole('group', { name: 'Place the ribbon' });
@@ -12,18 +12,14 @@ const pdfStart = { source: 'outline', body_start: { kind: 'pdf', page: 1, title:
 
 async function startFocus(page, api) {
   await openReader(page);
-  await page.getByRole('switch', { name: 'Focus mode' }).click();
+  await clickTool(page, page.getByRole('switch', { name: 'Focus mode' })); // C38.4b: in More tools on a phone
   await bar(page).getByRole('button', { name: 'Start' }).click();
   await expect.poll(() => api.focus.events.length).toBeGreaterThan(0);
   api.focus.active = 1500; // 25 minutes on the server: 250 points so far
 }
 
-async function toSpread(page) {
-  const before = await settled(page);
-  await book(page).focus();
-  await page.keyboard.press('ArrowRight');
-  return settled(page, before);
-}
+/** C38.2: two pages in view, as a spread used to show, so the ribbon has two places to go. */
+const toSpread = (page) => twoPagesInView(page);
 
 test('End session: set the ribbon on a page, ready, the questions, the results', async ({ page, api }) => {
   api.bodyStart = pdfStart;
@@ -71,7 +67,7 @@ test('End session: set the ribbon on a page, ready, the questions, the results',
   await expect(rows.nth(0)).toContainText('25 minutes');
   await expect(rows.nth(0)).toContainText('+250');
   await expect(rows.nth(1)).toContainText('Not counted');
-  await expect(rows.nth(1)).toContainText('Time on one page beyond 30 minutes without turning it · 10 minutes');
+  await expect(rows.nth(1)).toContainText('Time on one page beyond 30 minutes without moving to another page · 10 minutes');
   await expect(rows.nth(2)).toContainText('2 of 3 right · 67%');
   await expect(rows.nth(2)).toContainText('+40');
   await expect(rows.nth(3)).toContainText('+290');
@@ -188,12 +184,12 @@ test.describe('phone, Lamplight', () => {
     api.bodyStart = pdfStart;
     await startFocus(page, api);
     await bar(page).getByRole('button', { name: 'End session' }).click();
-    for (const button of await placing(page).getByRole('button').all()) {
+    for (const button of await placing(page).getByRole('button').all()) { // C38.2: a place for each page in view
       const box = await button.boundingBox();
       expect(Math.round(box.height)).toBeGreaterThanOrEqual(44);
       expect(box.x >= 0 && box.x + box.width <= 375).toBe(true);
     }
-    await placing(page).getByRole('button', { name: /^Set ribbon on/ }).click();
+    await placing(page).getByRole('button', { name: /^Set ribbon on/ }).first().click();
     await expect(ready(page)).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   });

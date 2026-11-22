@@ -3,7 +3,7 @@
 **ReadFocus** is a book comprehension app. Sign in with Google, upload a
 PDF, EPUB, Markdown file or Jupyter notebook, read it as published from where you left off,
 quiz yourself when you like, and see which ideas you hold. Highlights, a
-notepad beside the book, a focus mode with server-scored points, and XP,
+notebook beside the book, a focus mode with server-scored points, and XP,
 streaks, badges and weekly leagues come with it.
 
 **What is under the hood, plainly:** ReadFocus's quizzes, grading and
@@ -64,16 +64,31 @@ What is stored and sent is on the app's Privacy page (`/privacy`).
    cover comes from Open Library. A scanned PDF's pages are read with
    text recognition (tesseract.js) in your browser.
 3. **Open.** A book opens at your last place, or its first page if it is
-   new, and every page turn saves the place. There is no session to start,
+   new, and the place is saved as you read. There is no session to start,
    no plan for the day and no pace check (removed in C26; the planner's
    code is kept but no longer runs).
 4. **Read.** The book opens as published (PDF.js for PDFs, foliate-js for
-   EPUBs: images, figures, math and code as printed), two pages on a wide
-   screen, one on a phone. Hover or select a
+   EPUBs: images, figures, math and code as printed) and reads as in Microsoft
+   Edge's PDF viewer (C38): its pages scrolled on a desk (an EPUB as one column,
+   chapter after chapter), white in either theme, with Edge's toolbar (zoom, the
+   page box, one or two pages across, Find with Ctrl+F, full screen, pin), a
+   pane beside the pages for the contents, page thumbnails and your highlights,
+   and Edge's keys (Ctrl+G, Ctrl+Alt+G, Ctrl+\\, Ctrl+= and Ctrl+-); Save my place
+   (or B) keeps a small ribbon by the place. Hover or select a
    word for a card with its definition (Free Dictionary API) or a
-   Wikipedia summary. Highlight or underline a passage, and keep notes,
-   equations, code and drawings in the notepad beside the book, each tied
-   to its place.
+   Wikipedia summary. Mark the page with Edge's tools (C39): Highlight in
+   ten colours (select, or with the highlighter on), Draw and Add text on a
+   PDF's pages, Erase, a right-click menu on selected words, and comments on
+   highlights with an icon in the margin. And the rest of Edge's toolbar (C40): Read
+   aloud (Ctrl+Shift+U) in your system's voices, each word marked as it is spoken and the
+   page following it, from the page in view or "Read aloud from here" on a selection
+   (in focus mode, listening counts as reading); Print (Ctrl+P) and Save or Save as
+   (Ctrl+S) a copy of a PDF with your highlights, comments, ink and text written in as
+   real PDF annotations (an EPUB's highlights save as Markdown). Highlight or underline a passage, and write and
+   draw in the book's notebook (Excalidraw pages over 70 % of the screen,
+   the book in soft focus beside them): a passage, a highlight, Steve's
+   answer, an equation, code or a figure goes onto the page for its place,
+   and each page links back to it.
 5. **Focus (optional).** From chapter 1 on, focus mode runs a stopwatch
    timed by the server. Place a bookmark to end the session; a short quiz
    on the pages read decides whether the points count (10 a focused
@@ -81,7 +96,8 @@ What is stored and sent is on the app's Privacy page (`/privacy`).
    a daily goal, a streak with earned freezes, badges, and a weekly league
    you can leave.
 6. **Ask Steve (optional).** After a consent notice, Steve explains a
-   passage, an equation, code or a figure, citing the page or section. He
+   passage, an equation, code or a figure, citing the page or section; in
+   Copilot's place (C40) he also summarizes a selection or the page you are on. He
    is off during a test or quiz, rests when his daily limit or Google's
    free tier runs out, and can be switched off.
 7. **Quiz me.** About five questions from the bank on this chapter, or on
@@ -109,7 +125,7 @@ Every agent decision is stored with its inputs and reason
 React + Vite (Vercel) ──JWT──► FastAPI (Render, Docker) ──service role──► Supabase
   Library, original view          /books /sessions /dashboard                Postgres + pgvector
   (PDF.js, foliate-js),           /mastery /lookup /auth /focus              Storage, Auth, RLS
-  notepad, Test, Results,         /steve /me /badges /leagues
+  notebook, Test, Results,        /steve /me /badges /leagues
   Dashboard, League               LangGraph: (planner, dormant) · test gen. ·
                                   evaluator · knowledge state · optimizer
                                   fastembed all-MiniLM-L6-v2 (local)
@@ -125,7 +141,7 @@ React + Vite (Vercel) ──JWT──► FastAPI (Render, Docker) ──service 
 | Local NLP | fastembed all-MiniLM-L6-v2 (ONNX), YAKE, rapidfuzz (`backend/nlp/`) |
 | Data | Supabase Postgres, pgvector, Storage, Auth, row-level security (`supabase/migrations/`, additive only) |
 | Sign-in | Google OAuth through Supabase Auth (PKCE), the only way in since C28; the Email provider stays on for the password test users of the live checks |
-| Reader | PDF.js and foliate-js (vendored), KaTeX, TipTap and Excalidraw for notes, tesseract.js for scanned pages (all in the browser) |
+| Reader | PDF.js and foliate-js (vendored), KaTeX, Excalidraw for the notebook, tesseract.js for scanned pages (all in the browser) |
 | Free APIs | Free Dictionary API and Wikipedia (word lookup), Open Library (covers) |
 | Generative AI | Google Gemini, for Steve only, through `backend/steve/provider.py`, after consent; free tier or the reader's own key (`docs/STEVE.md`) |
 

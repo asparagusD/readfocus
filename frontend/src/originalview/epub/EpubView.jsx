@@ -9,7 +9,7 @@ import './epub.css';
  * 1024 px, one below; fixed-layout books page by page). `load(bookId)` gives the file
  * (default: this device's copy, else the signed URL). `ref` gets { next, prev, goTo, contents }.
  * `style` is 'publisher' or 'readfocus' (Lora); `fontSize`, `lineHeight` and `margins`
- * (narrow, normal, wide) apply in both; `themeCss` recolours for lamplight (C17.4).
+ * (narrow, normal, wide) apply in both; `themeCss` is added last (unused since C38.3: no recolouring).
  */
 export function EpubView({
   bookId, load = fromBook, style = 'publisher', fontSize = 18, lineHeight = null, margins = 'normal', themeCss = '',

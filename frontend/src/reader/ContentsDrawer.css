@@ -1,4 +1,5 @@
-/* Contents drawer (C12.5b, D4): from the left on wider screens, a sheet from the bottom on phones. */
+/* Contents drawer (C12.5b, D4): from the left on wider screens, a sheet from the bottom on phones. C38.6a: from
+   1024 px Edge's left pane, beside the pages (data-docked, at the end of this file). */
 .rf-contents {
   position: fixed;
   top: 0;
@@ -141,7 +142,8 @@
 }
 .rf-contents-tab {
   min-height: 44px;
-  padding: 0 var(--space-3);
+  padding: 0 var(--space-2); /* C38.6b: three tabs on one line in the pane */
+  white-space: nowrap;
   border: 0;
   border-bottom: var(--border-strong) solid transparent;
   background: transparent;
@@ -192,11 +194,7 @@
   border-radius: var(--radius-pill);
   box-shadow: 0 0 0 var(--border-hair) var(--line-field);
 }
-.rf-anno-filter-dot[data-colour="honey"] > span { background: var(--dot-honey); }
-.rf-anno-filter-dot[data-colour="sage"] > span { background: var(--dot-sage); }
-.rf-anno-filter-dot[data-colour="sky"] > span { background: var(--dot-sky); }
-.rf-anno-filter-dot[data-colour="rose"] > span { background: var(--dot-rose); }
-.rf-anno-filter-dot[data-colour="lilac"] > span { background: var(--dot-lilac); }
+.rf-anno-filter-dot > span { background: var(--c-dot); } /* C39.2: any palette colour (tokens.css) */
 .rf-anno-filter button:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: 1px; }
 
 .rf-contents-item.rf-anno-item { align-items: flex-start; justify-content: flex-start; }
@@ -208,16 +206,8 @@
   border-radius: var(--radius-hair);
 }
 .rf-anno-mark[data-style="underline"] { block-size: 2px; margin-block-start: 16px; }
-.rf-anno-mark[data-style="highlight"][data-colour="honey"] { background: var(--hl-honey); box-shadow: inset 0 0 0 var(--border-hair) var(--ul-honey); }
-.rf-anno-mark[data-style="highlight"][data-colour="sage"] { background: var(--hl-sage); box-shadow: inset 0 0 0 var(--border-hair) var(--ul-sage); }
-.rf-anno-mark[data-style="highlight"][data-colour="sky"] { background: var(--hl-sky); box-shadow: inset 0 0 0 var(--border-hair) var(--ul-sky); }
-.rf-anno-mark[data-style="highlight"][data-colour="rose"] { background: var(--hl-rose); box-shadow: inset 0 0 0 var(--border-hair) var(--ul-rose); }
-.rf-anno-mark[data-style="highlight"][data-colour="lilac"] { background: var(--hl-lilac); box-shadow: inset 0 0 0 var(--border-hair) var(--ul-lilac); }
-.rf-anno-mark[data-style="underline"][data-colour="honey"] { background: var(--ul-honey); }
-.rf-anno-mark[data-style="underline"][data-colour="sage"] { background: var(--ul-sage); }
-.rf-anno-mark[data-style="underline"][data-colour="sky"] { background: var(--ul-sky); }
-.rf-anno-mark[data-style="underline"][data-colour="rose"] { background: var(--ul-rose); }
-.rf-anno-mark[data-style="underline"][data-colour="lilac"] { background: var(--ul-lilac); }
+.rf-anno-mark[data-style="highlight"] { background: var(--c-hl); box-shadow: inset 0 0 0 var(--border-hair) var(--c-ul); }
+.rf-anno-mark[data-style="underline"] { background: var(--c-ul); }
 .rf-anno-text {
   flex: 1;
   display: -webkit-box;
@@ -225,4 +215,76 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   line-clamp: 2;
+}
+
+/* C38.6b: the Pages tab: two thumbnails across, each the page as published with its printed label. */
+.rf-pages-list {
+  display: grid;
+  flex: 1;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-2) var(--space-3) var(--space-5);
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  list-style: none;
+}
+
+.rf-thumb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  width: 100%;
+  padding: var(--space-2) var(--space-1);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  cursor: pointer;
+}
+
+.rf-thumb:hover { background: var(--paper-2); }
+.rf-thumb[aria-current="true"] { background: var(--accent-soft); color: var(--ink); }
+
+.rf-thumb-sheet {
+  display: block;
+  width: 100%;
+  max-width: 112px;
+  aspect-ratio: 612 / 792; /* a letter page until it is drawn */
+  border: var(--border-hair) solid var(--line);
+  background: #fff; /* the publisher's page, in either theme (C38.3) */
+}
+
+.rf-thumb[data-drawn] .rf-thumb-sheet { aspect-ratio: auto; }
+.rf-thumb-sheet canvas { display: block; width: 100%; height: auto; }
+.rf-thumb[aria-current="true"] .rf-thumb-sheet { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* C38.6a (issue 22): Edge's left pane: a column of the reading body, the pages narrowing beside it. */
+.rf-contents[data-docked] {
+  position: relative;
+  top: auto;
+  bottom: auto;
+  left: auto;
+  z-index: auto;
+  flex: none;
+  width: 300px;
+  margin: var(--space-3) 0 var(--space-2) var(--space-4);
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-panel);
+  box-shadow: none;
+}
+
+/* C39.8: a highlight's comment under its words in the Annotations tab, quieter, two lines at most. */
+.rf-anno-body { flex: 1; display: flex; flex-direction: column; gap: 2px; min-inline-size: 0; }
+.rf-anno-comment {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  color: var(--ink-2);
+  font-size: var(--text-label);
+  font-style: italic;
 }

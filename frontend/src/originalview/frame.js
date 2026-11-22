@@ -1,23 +1,9 @@
 // The book frame's rules (C17.4), shared by the PDF and EPUB renderers and kept
-// free of the DOM so they run under node --test: spreads, zoom, folios, EPUB
-// location numbers, keys, the contents entry for a page, and lamplight CSS.
+// free of the DOM so they run under node --test: zoom, folios, EPUB location
+// numbers, keys and the contents entry for a page (C38.3: no lamplight CSS). C38.2: a PDF
+// scrolls (scroll.js), so its spreads are gone; an EPUB keeps SPREAD_MIN_WIDTH.
 
 export const SPREAD_MIN_WIDTH = 1024; // two pages side by side from here up (C12, handoff)
-
-/** The PDF pages shown with `page`: a spread opens with page 1 alone on the right, then 2-3, 4-5... */
-export function spreadPages(page, numPages, wide) {
-  if (!wide || page === 1) return [page];
-  const left = page % 2 === 0 ? page : page - 1;
-  return left + 1 <= numPages ? [left, left + 1] : [left];
-}
-
-/** The first page shown after turning by `dir` (+1 or -1) from the view holding `page`. */
-export function stepSpread(page, numPages, wide, dir) {
-  if (!wide) return Math.min(numPages, Math.max(1, page + dir));
-  const [first] = spreadPages(page, numPages, true);
-  if (dir > 0) return first === 1 ? Math.min(2, numPages) : first + 2 <= numPages ? first + 2 : first;
-  return first <= 2 ? 1 : first - 2;
-}
 
 export const ZOOMS = ['fit-page', 'fit-width', 1.25, 1.5, 1.75, 2];
 const CSS_PX_PER_POINT = 96 / 72; // 100 % is the page at its printed size
@@ -34,6 +20,37 @@ export function pdfScale(zoom, page, frame, columns = 1) {
 export function zoomStep(zoom, dir) {
   const at = Math.max(0, ZOOMS.indexOf(zoom));
   return ZOOMS[Math.min(ZOOMS.length - 1, Math.max(0, at + dir))];
+}
+
+/** C38.9: an EPUB's text sizes, and the next one in or out (Ctrl+= and Ctrl+-, the toolbar's A and A), stopping at the ends. */
+export const FONT_SIZES = [14, 16, 18, 20, 22, 24];
+export function fontStep(size, dir) {
+  const at = FONT_SIZES.indexOf(size);
+  return FONT_SIZES[Math.min(FONT_SIZES.length - 1, Math.max(0, (at < 0 ? FONT_SIZES.indexOf(18) : at) + dir))];
+}
+
+/**
+ * C38.9 (issue 22): Edge's reader shortcuts, from a keydown: 'find' (Ctrl+F), 'find-next' and 'find-prev' (Ctrl+G,
+ * Ctrl+Shift+G), 'go-to-page' (Ctrl+Alt+G), 'fit' (Ctrl+\), 'zoom-in' and 'zoom-out' (Ctrl+= or Ctrl++, Ctrl+-); Cmd
+ * for Ctrl on a Mac. Null for anything else, Ctrl+0 and the wheel too: the browser's own zoom is left alone.
+ * C40.2c (issue 24): 'read-aloud' (Ctrl+Shift+U), as Edge's. C40.4c: 'save' (Ctrl+S) and 'save-as' (Ctrl+Shift+S).
+ * C40.5: 'print' (Ctrl+P): the book, not the app's page.
+ */
+export function readerShortcut({ key = '', code = '', ctrlKey = false, metaKey = false, shiftKey = false, altKey = false }) {
+  if (!ctrlKey && !metaKey) return null;
+  if (code === 'KeyG' || key.toLowerCase() === 'g') {
+    if (altKey) return shiftKey ? null : 'go-to-page';
+    return shiftKey ? 'find-prev' : 'find-next';
+  }
+  if (altKey) return null;
+  if ((code === 'KeyU' || key.toLowerCase() === 'u') && shiftKey) return 'read-aloud';
+  if (code === 'KeyS' || key.toLowerCase() === 's') return shiftKey ? 'save-as' : 'save';
+  if ((code === 'KeyP' || key.toLowerCase() === 'p') && !shiftKey) return 'print';
+  if ((code === 'KeyF' || key.toLowerCase() === 'f') && !shiftKey) return 'find';
+  if ((code === 'Backslash' || key === '\\') && !shiftKey) return 'fit';
+  if (code === 'Equal' || code === 'NumpadAdd' || key === '=' || key === '+') return 'zoom-in';
+  if (code === 'Minus' || code === 'NumpadSubtract' || key === '-' || key === '_') return 'zoom-out';
+  return null;
 }
 
 export const zoomLabel = (zoom) => (zoom === 'fit-page' ? 'Fit page' : zoom === 'fit-width' ? 'Fit width' : `${Math.round(zoom * 100)}%`);
@@ -67,6 +84,24 @@ export function locationAt(locations, index, charsBefore) {
   return Math.min(locations.total, page);
 }
 
+/**
+ * C38.7b: where location page `page` (1-based, as locationAt counts) begins: { index, char } in the section holding
+ * its first character (empty sections skipped), the page clamped to the book; null before locations exist.
+ */
+export function locationPlace(locations, page) {
+  if (!locations?.chars?.length) return null;
+  const offset = (Math.min(Math.max(1, Math.round(page)), locations.total) - 1) * locations.perPage;
+  let last = null;
+  for (let index = 0; index < locations.chars.length; index += 1) {
+    const size = locations.chars[index];
+    if (!size) continue;
+    const start = locations.starts[index];
+    if (offset < start + size) return { index, char: Math.max(0, offset - start) };
+    last = { index, char: size - 1 };
+  }
+  return last;
+}
+
 /** What a key does in the book; null leaves it to the browser (modifier shortcuts, typing). */
 export function keyAction({ key, shiftKey = false, ctrlKey = false, metaKey = false, altKey = false }) {
   if (ctrlKey || metaKey || altKey) return null;
@@ -84,21 +119,6 @@ export function entryForPage(entries, page) {
   let found = null;
   for (const entry of entries ?? []) if (entry.page <= page && (!found || entry.page >= found.page)) found = entry;
   return found;
-}
-
-/**
- * Lamplight for an EPUB section: text and backgrounds take the theme's colours;
- * images, SVG drawings (and everything inside them), video and canvas keep the
- * publisher's colours. No filter is ever applied, so nothing is inverted.
- */
-export function epubThemeCss({ background, foreground, link, code }) {
-  const text = ':not(img):not(svg):not(svg *):not(video):not(canvas):not(picture)';
-  return `
-html, body { background-color: ${background} !important; color: ${foreground} !important; }
-body *${text} { color: inherit !important; background-color: transparent !important; border-color: color-mix(in srgb, ${foreground} 25%, transparent) !important; }
-body a${text}, body a${text} * { color: ${link} !important; }
-body pre, body pre *${text} { background-color: ${code} !important; }
-`;
 }
 
 /** The fraction of an animation's time at which a cubic-bezier easing reaches `progress`. */

@@ -16,6 +16,7 @@ from backend.routers import (
     focus,
     notes,
     ocr,
+    page_marks,
     reading,
     steve_ask,
 )
@@ -35,7 +36,7 @@ def db(monkeypatch):
         {"id": KEPT, "user_id": USER, "storage_path": None, "status": "ready"},
     ]
     for module in (books, book_purge, book_ingestor, annotations, notes, ocr, reading, focus, device_books, steve_ask,
-                   context):
+                   context, page_marks):
         monkeypatch.setattr(module, "supabase", db)
     return db
 
@@ -52,6 +53,7 @@ def client(db):
     ("get", f"/books/{BOOK}/regions?first=1&last=1"), ("get", f"/books/{BOOK}/status"),
     ("post", f"/books/{BOOK}/resume"), ("get", f"/books/{BOOK}/body-start"), ("get", f"/books/{BOOK}/open"),
     ("get", f"/books/{BOOK}/ocr"), ("get", f"/books/{BOOK}/annotations"), ("get", f"/books/{BOOK}/notes"),
+    ("get", f"/books/{BOOK}/marks"),
 ])
 def test_a_book_being_deleted_is_not_found_anywhere(client, db, method, path):
     assert getattr(client, method)(path).status_code == 404

@@ -17,7 +17,7 @@ function fitPng(source, rect, width, height, doc = document, maxBytes = MAX_IMAG
 
 /**
  * A region of a rendered PDF page as a PNG for Steve (C20.8): read from the page's own canvas (what the
- * reader sees, recoloured or not), the box plus a little padding, at twice its CSS size, under 500 KB.
+ * reader sees, as published since C38.3), the box plus a little padding, at twice its CSS size, under 500 KB.
  */
 export function cropPdfRegion(pageEl, bbox, maxBytes = MAX_IMAGE_BYTES) {
   const canvas = pageEl?.querySelector('canvas');

@@ -140,6 +140,7 @@
   --dur-4: 400ms; /* question slide, chip stagger */
   --dur-5: 600ms; /* page turn, book arrives, library to reading */
   --dur-6: 800ms; /* score count-up, chart draw */
+  --dur-rack: 450ms; /* C37.7: the notebook's rack focus (a spring's visual duration) */
   --duration-micro: var(--dur-1);
   --duration-base: var(--dur-3);
   --duration-signature: var(--dur-5);
@@ -170,6 +171,22 @@
   --dot-sky: #7fa3c2;
   --dot-rose: #d08a7e;
   --dot-lilac: #a892c6;
+  /* C39.2 (issue 23, D3): Edge's red and its deeper yellow, green, blue and pink. */
+  --dot-poppy: #d9604f;
+  --dot-amber: #d9a12e;
+  --dot-fern: #6e9d58;
+  --dot-ocean: #5a8fc2;
+  --dot-berry: #c86b95;
+
+  /* C39.2: ink strokes and text boxes (page marks), drawn on a published page, which is white in either theme:
+     4.5:1 or more on white and on Paper's --page, so a text box reads as text. */
+  --mark-ink: #24201c;
+  --mark-poppy: #b3261e;
+  --mark-amber: #8a5a00;
+  --mark-fern: #2f6b2a;
+  --mark-ocean: #1f5a99;
+  --mark-berry: #9c2a5e;
+  --mark-plum: #5f3a96;
 }
 
 /* ── Colour: Paper, terracotta (default) ────────────────────────────── */
@@ -197,11 +214,28 @@
   --hl-sky: #d5e2ec;
   --hl-rose: #f0d6d0;
   --hl-lilac: #e4dcec;
+  --hl-poppy: #f6b6a9; /* C39.2 (D3): Edge's red and the deeper five, measured the same way */
+  --hl-amber: #f1cf6f;
+  --hl-fern: #c3dbab;
+  --hl-ocean: #b8d1e8;
+  --hl-berry: #ecbdd2;
   --ul-honey: #988137;
   --ul-sage: #728b65;
   --ul-sky: #68869f;
   --ul-rose: #af746a;
   --ul-lilac: #8d7ba6;
+  --ul-poppy: #c2533f;
+  --ul-amber: #a2771a;
+  --ul-fern: #5b8748;
+  --ul-ocean: #4c7ca6;
+  --ul-berry: #b1587f;
+  /* C38.5: find's matches over a published (white) page in either theme, see-through so the ink shows: honey for
+     every match, a deeper amber for the one shown. */
+  --find-match: rgb(240 200 80 / 0.45);
+  --find-current: rgb(230 130 30 / 0.55);
+  /* C40.2: read aloud's spoken word over a published page, see-through ocean blue (Edge marks it in blue), apart
+     from find's amber. */
+  --read-word: rgb(76 124 166 / 0.35);
 
   --accent: #a64b2a;
   --accent-hover: #904428; /* A8: 18% toward --ink */
@@ -251,11 +285,21 @@
   --hl-sky: #3e454b;
   --hl-rose: #573d36;
   --hl-lilac: #4c424d;
+  --hl-poppy: #5f322b;
+  --hl-amber: #62501c;
+  --hl-fern: #394a30;
+  --hl-ocean: #2e4357;
+  --hl-berry: #57313f;
   --ul-honey: #d9b84f;
   --ul-sage: #8fae7e;
   --ul-sky: #7fa3c2;
   --ul-rose: #d08a7e;
   --ul-lilac: #a892c6;
+  --ul-poppy: #e27a6b;
+  --ul-amber: #e3b33d;
+  --ul-fern: #82b26c;
+  --ul-ocean: #72a5d8;
+  --ul-berry: #d77ca5;
 
   --accent: #e59a6c;
   --accent-hover: #e7a87f;
@@ -281,3 +325,25 @@
   --accent-text: #b3cba3;
   --glow: rgba(168, 193, 152, 0.24);
 }
+
+/* ── A palette colour's tokens on any element that names it (C39.2) ─── */
+/* An element with data-colour (a highlight, a dot, a list mark) reads its colour as --c-hl (behind text), --c-ul
+   (an underline) and --c-dot (a swatch), resolved in its own theme: a page's highlights sit under
+   data-theme="paper". A page mark's colour (data-mark-colour) is --c-mark. */
+[data-colour="honey"] { --c-hl: var(--hl-honey); --c-ul: var(--ul-honey); --c-dot: var(--dot-honey); }
+[data-colour="sage"] { --c-hl: var(--hl-sage); --c-ul: var(--ul-sage); --c-dot: var(--dot-sage); }
+[data-colour="sky"] { --c-hl: var(--hl-sky); --c-ul: var(--ul-sky); --c-dot: var(--dot-sky); }
+[data-colour="rose"] { --c-hl: var(--hl-rose); --c-ul: var(--ul-rose); --c-dot: var(--dot-rose); }
+[data-colour="lilac"] { --c-hl: var(--hl-lilac); --c-ul: var(--ul-lilac); --c-dot: var(--dot-lilac); }
+[data-colour="poppy"] { --c-hl: var(--hl-poppy); --c-ul: var(--ul-poppy); --c-dot: var(--dot-poppy); }
+[data-colour="amber"] { --c-hl: var(--hl-amber); --c-ul: var(--ul-amber); --c-dot: var(--dot-amber); }
+[data-colour="fern"] { --c-hl: var(--hl-fern); --c-ul: var(--ul-fern); --c-dot: var(--dot-fern); }
+[data-colour="ocean"] { --c-hl: var(--hl-ocean); --c-ul: var(--ul-ocean); --c-dot: var(--dot-ocean); }
+[data-colour="berry"] { --c-hl: var(--hl-berry); --c-ul: var(--ul-berry); --c-dot: var(--dot-berry); }
+[data-mark-colour="ink"] { --c-mark: var(--mark-ink); }
+[data-mark-colour="poppy"] { --c-mark: var(--mark-poppy); }
+[data-mark-colour="amber"] { --c-mark: var(--mark-amber); }
+[data-mark-colour="fern"] { --c-mark: var(--mark-fern); }
+[data-mark-colour="ocean"] { --c-mark: var(--mark-ocean); }
+[data-mark-colour="berry"] { --c-mark: var(--mark-berry); }
+[data-mark-colour="plum"] { --c-mark: var(--mark-plum); }

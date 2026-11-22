@@ -37,10 +37,15 @@ export const idleDue = (lastInput, now) => now - lastInput >= IDLE_MS;
 export const answerLapsed = (promptAt, now) => now - promptAt >= ANSWER_MS;
 export const noticeDue = (activeSeconds) => activeSeconds >= CAP_S - NOTICE_LEFT_S;
 
-/** The page shown, for page-turn events: "p12", or an EPUB section and its first character. */
+/**
+ * The page shown, for page-turn events: "p12", or an EPUB section and its first character. C38.1 (issue 22, D3): in
+ * a scrolled book the place carries `main`, the page with the most area in view (an EPUB's location page, "l42"), so
+ * a scroll that leaves it most in view is no turn.
+ */
 export function pageKey(place) {
   if (!place) return null;
-  return (place.kind === 'pdf' ? `p${place.pages[0]}` : `s${place.index}:${place.charStart}`).slice(0, 64);
+  if (place.kind === 'pdf') return `p${place.main ?? place.pages[0]}`.slice(0, 64);
+  return (place.main != null ? `l${place.main}` : `s${place.index}:${place.charStart}`).slice(0, 64);
 }
 
 /** Its A4 position (docs/ANCHORS.md): the page or section above a million, the character below. */

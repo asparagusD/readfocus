@@ -1,6 +1,6 @@
 // Block actions in an EPUB (C20.8c): the converted fixture's equation (with its TeX annotation), its Python
 // listing and its plot. Copy as LaTeX and Copy code never leave the device; Explain asks Steve.
-import { test, expect, BOOKS, book, openReader, settled } from './fixtures.js';
+import { test, expect, BOOKS, book, clickTool, openReader, settled } from './fixtures.js';
 
 BOOKS.converted = { file: 'converted.epub', format: 'epub', type: 'application/epub+zip', today: [0],
   chunks: ['Converted text that no book holds, so today runs from the start to the end of the book.'] };
@@ -42,7 +42,7 @@ test('an equation copies as LaTeX from its TeX annotation, with no call', async 
   const math = await find(page, 'math');
   await hover(page, math);
   const actions = page.getByRole('toolbar', { name: 'Equation, this page' });
-  await expect(actions.getByRole('button')).toHaveText(['Explain this equation', 'Copy as LaTeX', 'Add to notes', '']); // C22.6: Add to notes and the drag grip
+  await expect(actions.getByRole('button')).toHaveText(['Explain this equation', 'Copy as LaTeX', 'Add to notes']); // C22.6: Add to notes (C37.3: the drag grip retired)
   await actions.getByRole('button', { name: 'Copy as LaTeX' }).click();
   const dialog = page.getByRole('dialog', { name: 'Copy as LaTeX' });
   await expect(dialog.locator('.rf-latex-source')).toHaveText('E = mc^2');
@@ -116,10 +116,10 @@ test('keyboard: a block takes focus, Enter moves to its actions, Esc puts them a
 test('with Steve switched off, an equation keeps Copy as LaTeX and loses Explain', async ({ page, api }) => {
   api.steve.enabled = false; // C21.4 follow-up (steve-guardrails S2)
   await openReader(page);
-  await page.getByRole('button', { name: 'Ask Steve' }).click();
+  await clickTool(page, page.getByRole('button', { name: 'Ask Steve' })); // C38.7b: in More tools when the bar is full
   await expect(page.getByPlaceholder('Turn on Steve to ask')).toBeVisible();
   await page.keyboard.press('Escape');
   await hover(page, await find(page, 'math'));
-  await expect(page.getByRole('toolbar', { name: 'Equation, this page' }).getByRole('button')).toHaveText(['Copy as LaTeX', 'Add to notes', '']);
+  await expect(page.getByRole('toolbar', { name: 'Equation, this page' }).getByRole('button')).toHaveText(['Copy as LaTeX', 'Add to notes']);
   expect(api.steve.asks).toHaveLength(0);
 });

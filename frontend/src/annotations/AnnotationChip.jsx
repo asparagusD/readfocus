@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { autoUpdate, flip, FloatingPortal, offset, shift, useFloating } from '@floating-ui/react';
-import { MessageCircle, Plus, Trash2, Underline } from 'lucide-react';
+import { MessageCircle, MessageSquareText, Plus, Trash2, Underline } from 'lucide-react';
 import { useSteveActions } from '../steve/SteveContext';
-import { COLOURS, colourName } from './palette';
+import { ColourDots } from './ColourDots';
+import { colourName } from './palette';
 import { rove } from './roving';
 import './SelectionToolbar.css';
 
@@ -11,13 +12,13 @@ const snippet = (text) => (text.length > SNIPPET ? `${text.slice(0, SNIPPET - 1)
 
 /**
  * The chip on a highlight (C21.4; handoff screen 18 "Ask Steve chip above its end"): Ask Steve first, then the
- * five colours, Underline and Delete. It sits above the end of the annotation's last line, flipping below at the
- * page's top, never over the line. Ask Steve opens the panel in explain_highlight mode with the annotation's
+ * colours (C39.2: ColourDots, More colours for Edge's other five), Underline and Delete. It sits above the end of
+ * the annotation's last line, flipping below at the page's top, never over the line. Ask Steve opens the panel in explain_highlight mode with the annotation's
  * first anchor (the panel shows the consent notice first when it is needed). A chip opened with A takes focus;
  * A moves to the next highlight, Shift+A the previous, Escape returns to the book. `ref` is its element, for the
  * hover rules (useAnnotationChip). A pending (unsaved) annotation can be asked about but not changed yet.
  */
-export function AnnotationChip({ annotation, by, rectsOf, onChange, onDelete, onCycle, onClose, onNote = null, ref }) {
+export function AnnotationChip({ annotation, by, rectsOf, onChange, onDelete, onCycle, onClose, onNote = null, onComment = null, ref }) {
   const steve = useSteveActions(); // null while Steve is off: no Ask Steve
   const { refs, floatingStyles, placement } = useFloating({
     placement: 'top-end',
@@ -81,17 +82,20 @@ export function AnnotationChip({ annotation, by, rectsOf, onChange, onDelete, on
             <span className="rf-seltool-sep" aria-hidden="true" />
           </>
         )}
-        {COLOURS.map((c, i) => (
-          <button key={c} type="button" className="rf-seltool-dot" data-colour={c} data-last={c === color || undefined}
-            tabIndex={!steve && i === 0 ? 0 : -1} aria-label={colourName(c)} aria-pressed={c === color} disabled={fixed}
-            onClick={() => c !== color && onChange(id, { color: c })}>
-            <span aria-hidden="true" />
-          </button>
-        ))}
+        <ColourDots current={color} pressed firstTab={!steve} disabled={fixed}
+          onPick={(c) => c !== color && onChange(id, { color: c })} />
         <button type="button" className="rf-seltool-btn" tabIndex={-1} aria-label="Underline" aria-pressed={style === 'underline'}
           disabled={fixed} onClick={() => onChange(id, { style: style === 'underline' ? 'highlight' : 'underline' })}>
           <Underline size={18} strokeWidth={1.75} aria-hidden="true" />
         </button>
+        {onComment && (
+          // C39.8 (issue 23, D1): its comment, added or edited in place.
+          <button type="button" className="rf-seltool-btn" tabIndex={-1} disabled={fixed}
+            aria-label={annotation.comment ? 'Edit comment' : 'Add comment'} title={annotation.comment ? 'Edit comment' : 'Add comment'}
+            onClick={() => { onComment(id); onClose(false); }}>
+            <MessageSquareText size={18} strokeWidth={1.75} aria-hidden="true" />
+          </button>
+        )}
         {onNote && (
           // C22.6: a text note quoting this passage, linked to it.
           <button type="button" className="rf-seltool-btn" tabIndex={-1} aria-label="Add note" title="Add note" disabled={fixed}

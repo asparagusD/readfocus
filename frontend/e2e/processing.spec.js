@@ -1,7 +1,7 @@
 // C26.3: a book opens before it is processed. The reader opens it through GET /books/{id}/open with no session,
 // saves every turn on the book and comes back to it, and says "Preparing the book… n%" until its ingest is
 // done (C36: what is read is quizzed meanwhile); Quiz me and a focus session's questions say they are being prepared, and the session is kept. Mocked API.
-import { book, expect, openReader, settled, shown, test } from './fixtures.js';
+import { book, clickTool, expect, openReader, reveal, settled, shown, test } from './fixtures.js';
 
 const PROCESSING = { status: 'processing', total_chunks: null, ingestion: { status: 'running', progress: 0.4, cursor: 0, attempts: 1, error: null } };
 const shots = process.env.E2E_SHOTS;
@@ -17,7 +17,9 @@ for (const kind of ['pdf', 'epub']) {
       await openReader(page);
       expect(api.opens).toBe(1);
       expect(api.starts).toBe(0); // no session, no plan
-      await expect(page.getByRole('status').filter({ hasText: 'Preparing the book… 40%' })).toBeVisible();
+      // C38.7b: in More tools when the bar has no room for it
+      await expect(await reveal(page, page.getByRole('status').filter({ hasText: 'Preparing the book… 40%' }))).toBeVisible();
+      await page.keyboard.press('Escape'); // More tools closes
       await expect(page.locator('.rf-ov-note .rf-note')).toHaveCount(0); // no "Suggested next"
       if (shots) await page.screenshot({ path: `${shots}/processing-${kind}-1440.png` });
       const before = await settled(page);
@@ -29,7 +31,13 @@ for (const kind of ['pdf', 'epub']) {
       expect(api.position.chunk_index).toBeUndefined();
       await page.reload();
       await page.locator('.rf-ov[data-loading="false"][data-start]').waitFor({ timeout: 15_000 });
-      await expect.poll(async () => (await shown(page)).start).toBe(after.start);
+      // C38.7a: a scrolled EPUB reopens at the saved point a little inside the view (C17.6): its line, a few characters on
+      const spot = (s) => s.split(':').map(Number);
+      await expect.poll(async () => {
+        const [index, char] = spot((await shown(page)).start);
+        const [was, at] = spot(after.start);
+        return kind === 'pdf' ? index === was : index === was && char >= at && char - at <= 160;
+      }).toBe(true);
     });
   });
 }
@@ -37,7 +45,7 @@ for (const kind of ['pdf', 'epub']) {
 test('the preparing notice goes once the book is processed', async ({ page, api }) => {
   api.processing = PROCESSING;
   await openReader(page);
-  const notice = page.getByRole('status').filter({ hasText: 'Preparing the book' });
+  const notice = await reveal(page, page.getByRole('status').filter({ hasText: 'Preparing the book' })); // C38.7b
   await expect(notice).toBeVisible();
   api.processing = { status: 'ready', total_chunks: 4, ingestion: { status: 'done', progress: 1, cursor: 4, attempts: 1, error: null } };
   await expect(notice).toHaveCount(0, { timeout: 8000 });
@@ -51,7 +59,7 @@ test('Quiz me says the questions are being prepared and the book stays open', as
     body: JSON.stringify({ detail: { code: 'preparing', message: 'The pages up to here are still being prepared. Try again in a moment.' } }),
   }));
   await openReader(page);
-  await page.getByRole('button', { name: 'Quiz me' }).click();
+  await clickTool(page, page.getByRole('button', { name: 'Quiz me' })); // C38.7b: in More tools when the bar is full
   await page.getByRole('dialog', { name: 'Quiz me' }).getByRole('button', { name: 'This chapter' }).click();
   await expect(page.getByText('The pages up to here are still being prepared. Try again in a moment.')).toBeVisible();
   await expect(page).toHaveURL(/\/read\/e2e-book$/);
@@ -69,8 +77,8 @@ test('while the book is still prepared, Quiz me on the pages read opens its quiz
     });
   });
   await openReader(page);
-  await expect(page.getByRole('status').filter({ hasText: 'Preparing the book… 40%' })).toBeVisible();
-  await page.getByRole('button', { name: 'Quiz me' }).click();
+  await expect(await reveal(page, page.getByRole('status').filter({ hasText: 'Preparing the book… 40%' }))).toBeVisible();
+  await page.getByRole('button', { name: 'Quiz me' }).click(); // C38.7b: in the open More tools, beside the status
   await page.getByRole('dialog', { name: 'Quiz me' }).getByRole('button', { name: 'This chapter' }).click();
   await expect(page).toHaveURL(/\/quiz\/qm-1$/);
   expect(built).toHaveLength(1);
@@ -81,7 +89,7 @@ test('a focus session ended while the questions are prepared is kept, and its qu
   api.processing = PROCESSING;
   api.focus.preparing = 1; // the first ask waits; the next, 5 s later, has the questions
   await openReader(page);
-  await page.getByRole('switch', { name: 'Focus mode' }).click();
+  await clickTool(page, page.getByRole('switch', { name: 'Focus mode' })); // C38.7b
   await bar(page).getByRole('button', { name: 'Start' }).click();
   await expect.poll(() => api.focus.events.length).toBeGreaterThan(0);
   await bar(page).getByRole('button', { name: 'End session' }).click();
@@ -96,7 +104,7 @@ test('at 375 the preparing notice fits the screen with no sideways scroll', asyn
   await page.setViewportSize({ width: 375, height: 812 });
   api.processing = PROCESSING;
   await openReader(page);
-  const notice = page.getByRole('status').filter({ hasText: 'Preparing the book… 40%' });
+  const notice = await reveal(page, page.getByRole('status').filter({ hasText: 'Preparing the book… 40%' })); // C38.4b
   await expect(notice).toBeVisible();
   const box = await notice.boundingBox();
   expect(box.x).toBeGreaterThanOrEqual(0);

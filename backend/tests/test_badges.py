@@ -50,11 +50,11 @@ HOUR = 3600
     ("streak_30", Facts(streak_days=30), True),
     ("streak_100", Facts(streak_days=99), False),
     ("streak_100", Facts(streak_days=100), True),
-    ("first_note", Facts(text_notes=0), False),
-    ("first_note", Facts(text_notes=1), True),
-    ("first_note", Facts(drawings=1), False),  # a drawing is not a typed note
+    ("first_note", Facts(notebook_words=False), False),
+    ("first_note", Facts(notebook_words=True), True),
+    ("first_note", Facts(drawings=1), False),  # C37.1: a page with no words is not a first note
     ("first_drawing", Facts(drawings=1), True),
-    ("first_drawing", Facts(text_notes=4), False),
+    ("first_drawing", Facts(notebook_words=True), False),
     ("first_steve", Facts(steve_answers=0), False),
     ("first_steve", Facts(steve_answers=1), True),
     ("finished_book", Facts(finished_book=True), True),
@@ -67,7 +67,7 @@ def test_each_rule_at_its_edge(badge, facts, holds):
 
 
 def test_earned_returns_new_badges_for_the_trigger_in_catalogue_order():
-    facts = Facts(passed_sessions=1, focus_seconds=60 * HOUR, perfect_quiz=True, streak_days=7, text_notes=1)
+    facts = Facts(passed_sessions=1, focus_seconds=60 * HOUR, perfect_quiz=True, streak_days=7, notebook_words=True)
     assert [b.id for b in earned(facts, set(), "focus")] == [
         "first_focus", "focus_10h", "focus_50h", "perfect_quiz", "streak_7"]
     assert [b.id for b in earned(facts, {"first_focus", "focus_10h"}, "focus")] == [

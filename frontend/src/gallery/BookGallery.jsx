@@ -1,7 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { Reader } from '../originalview/Reader';
 import { ReaderControls } from '../originalview/ReaderControls';
-import { useLamplight } from '../originalview/useLamplight';
 import { ReaderToolbar } from '../reader/ReaderToolbar';
 
 const params = new URLSearchParams(globalThis.location?.search ?? '');
@@ -20,7 +19,6 @@ export default function BookGallery() {
   const [zoom, setZoom] = useState('fit-page');
   const [settings, setSettings] = useState({ style: 'publisher', fontSize: 18, lineHeight: null, margins: 'normal' });
   const [entry, setEntry] = useState(null);
-  const { theme, original, toggleOriginal } = useLamplight(bookId);
   const reader = useRef(null);
   const onRelocate = useCallback((place) => { probe.place = place; setEntry(place.entry); }, []);
 
@@ -29,8 +27,7 @@ export default function BookGallery() {
       <ReaderToolbar bookTitle={KIND === 'pdf' ? 'A sample PDF' : 'Reflow fixture'} chapter={entry} visible onFocusChange={() => {}}
         onBack={() => globalThis.history.back()}
         controls={(
-          <ReaderControls kind={KIND} zoom={zoom} onZoom={setZoom} settings={settings} onSettings={setSettings}
-            lamplight={theme === 'lamplight'} original={original} onOriginal={toggleOriginal} />
+          <ReaderControls kind={KIND} zoom={zoom} onZoom={setZoom} settings={settings} onSettings={setSettings} />
         )} />
       <Reader ref={(r) => { reader.current = r; probe.reader = r; }} kind={KIND} bookId={bookId} load={load}
         title={KIND === 'pdf' ? 'A sample PDF' : 'Reflow fixture'} zoom={zoom} settings={settings}

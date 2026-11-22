@@ -1,13 +1,23 @@
-// C22.4: anchoring notes and margin markers. "Add note" in the selection toolbar, N, or the notepad's Text pill
-// anchors the new note to the selection, else to the pages shown (PDF) or the page's CFI range (EPUB). "Link to
-// current selection" moves a note's anchor. Passages with notes get a marker in the margin beside them (PDF:
-// the frame margin outside the page; EPUB: the page margin); it stays beside them after a zoom, a larger text
-// size or a narrower window, and clicking it opens the notepad at those notes. Mocked API.
-import { book, expect, openReader, test, wordPoint } from './fixtures';
+// C22.4: anchoring notes and margin markers. Since C37.3 "Add note" in the selection toolbar and N start a notebook
+// page anchored to the selection (its passage written on the page), else to the pages shown (PDF) or the page's
+// CFI range (EPUB). "Link to current selection" moves a note's anchor. Passages with notes get a marker in the
+// margin beside them (PDF: the frame margin outside the page; EPUB: the page margin); it stays beside them after a
+// zoom, a larger text size or a narrower window, and clicking a page's marker opens the notebook at it. Mocked API.
+import { book, bookAtRest, expect, openNotepad, openReader, test, wordPoint } from './fixtures';
 
 const panel = (page) => page.getByRole('complementary', { name: 'Notes' });
 const toolbar = (page) => page.getByRole('toolbar', { name: 'Highlight the selection' });
 const markers = (page) => page.locator('.rf-note-marker');
+const notebook = (page) => page.getByRole('dialog', { name: 'Notebook' });
+const written = (api) => api.notePatches.filter((p) => p.content).at(-1)?.content.elements.filter((e) => e.type === 'text').map((e) => e.text) ?? [];
+
+/** A typed note from before C37.3 on the first pages, for the notepad's link button. */
+function typed(kind) {
+  const anchors = kind === 'pdf' ? [{ kind: 'pdf', page: 1, quads: [[0, 0, 612, 792]], text: '' }]
+    : [{ kind: 'epub', cfi: 'epubcfi(/6/4!/4/2,/1:0,/1:5)', text: '' }];
+  return { id: 'note-1', kind: 'text', scope: 'view', version: 1, orphaned: false, deleted_at: null, urls: {}, anchors,
+    position_start: 1e6, position_end: 1e6 + 79_299, content: { type: 'doc', content: [{ type: 'paragraph' }] }, created_at: '2026-11-14T10:00:00Z' };
+}
 
 /** Drag the mouse from the start of `from` to the end of `to` (first visible occurrences). */
 async function select(page, from, to) {
@@ -23,13 +33,14 @@ async function select(page, from, to) {
 
 /** The paper the marker belongs beside: the PDF page under a point, or the EPUB book box. */
 async function paperAt(page, kind, y) {
-  if (kind === 'epub') return page.locator('.rf-ov-book').boundingBox();
+  if (kind === 'epub') return page.locator('.rf-epub').boundingBox(); // C38.7a: the column on the desk
   const boxes = await page.locator('.rf-pdf-page').evaluateAll((els) => els.map((el) => el.getBoundingClientRect().toJSON()));
   return boxes.find((b) => y >= b.top && y <= b.bottom) ?? boxes[0];
 }
 
 /** The marker is level with `line` (its top within 14 px) and in the margin: outside a PDF page, inside an EPUB page's edge. */
 async function expectBeside(page, kind, line) {
+  await bookAtRest(page); // C37.7: the book comes forward after the notebook closes
   await expect(markers(page)).toHaveCount(1);
   const marker = await markers(page).boundingBox();
   expect(Math.abs(marker.y - line.top), `marker at ${marker.y}, line at ${line.top}`).toBeLessThanOrEqual(14);
@@ -37,8 +48,11 @@ async function expectBeside(page, kind, line) {
   const view = page.viewportSize();
   expect(marker.x).toBeGreaterThanOrEqual(0);
   expect(marker.x + marker.width).toBeLessThanOrEqual(view.width);
-  if (kind === 'pdf' && view.width >= 760) {
-    expect(marker.x >= paper.right || marker.x + marker.width <= paper.left, 'outside the page').toBe(true);
+  const right = paper.right ?? paper.x + paper.width;
+  if (view.width >= 760 && right + 40 < view.width) { // C38.8b: an EPUB's beside its column, as a PDF's beside its page
+    expect(marker.x >= right || marker.x + marker.width <= (paper.left ?? paper.x), 'outside the page').toBe(true);
+  } else if (kind === 'pdf' && view.width >= 760) { // C38.2: the page fills the width (fit-width): at the screen's edge
+    expect(view.width - (marker.x + marker.width), 'at the screen edge').toBeLessThanOrEqual(24);
   } else {
     const fromEdge = Math.min(Math.abs(marker.x - paper.x), Math.abs(paper.x + paper.width - (marker.x + marker.width)));
     expect(fromEdge, 'at the page edge').toBeLessThanOrEqual(24);
@@ -49,15 +63,18 @@ for (const kind of ['pdf', 'epub']) {
   test.describe(kind, () => {
     test.use({ book: kind });
 
-    test('Add note anchors to the selection and a marker appears beside it, after a re-layout too', async ({ page, api }) => {
+    test('Add note starts a page at the selection with the passage written on it; its marker stays beside it', async ({ page, api }) => {
       await openReader(page);
       const line = await select(page, 'lamp', 'circle');
       await toolbar(page).getByRole('button', { name: 'Add note' }).click();
-      await expect(panel(page).getByRole('textbox', { name: /^Note at / })).toBeFocused();
+      await expect(notebook(page)).toBeVisible();
       await expect.poll(() => api.notePosts.length).toBe(1);
       const [post] = api.notePosts;
-      expect(post.scope).toBe('selection');
+      expect(post).toMatchObject({ kind: 'drawing', scope: 'selection', content: { elements: [] } });
       expect(post.anchors[0]).toMatchObject({ kind, text: expect.stringMatching(/^lamp .*circle$/) });
+      await expect.poll(() => written(api).join(' | '), { timeout: 8000 }).toMatch(/lamp[\s\S]*circle/);
+      expect(written(api)[0]).toMatch(/^p\. |^This book/); // the passage's reference above it
+      await notebook(page).getByRole('button', { name: 'Close notebook' }).click();
       await expect(toolbar(page)).toHaveCount(0);
       await expectBeside(page, kind, line);
       await expect(markers(page)).toHaveAccessibleName('1 note on this passage');
@@ -72,37 +89,30 @@ for (const kind of ['pdf', 'epub']) {
       await expectBeside(page, kind, moved);
     });
 
-    test('N with nothing selected anchors to the pages shown, and the marker opens the note', async ({ page, api }) => {
+    test('N with nothing selected starts a page at the pages shown, and its marker opens the notebook there', async ({ page, api }) => {
       await openReader(page);
       await book(page).focus();
       await page.keyboard.press('n');
-      await expect(panel(page).getByRole('textbox', { name: /^Note at / })).toBeFocused();
+      await expect(notebook(page)).toBeVisible();
       await expect.poll(() => api.notePosts.length).toBe(1);
       const [post] = api.notePosts;
-      expect(post.scope).toBe('view');
+      expect(post).toMatchObject({ kind: 'drawing', scope: 'view' });
       expect(post.anchors[0]).toMatchObject({ kind, text: '' });
       if (kind === 'epub') expect(post.anchors[0].cfi).toContain(',');
-      await page.keyboard.type('About these pages');
-      await page.keyboard.press('Escape'); // out of the editor
-      await panel(page).getByRole('button', { name: 'Close notes' }).click();
-      await expect(panel(page)).toHaveCount(0);
+      await expect(notebook(page).locator('canvas.interactive')).toBeVisible({ timeout: 15_000 });
+      await notebook(page).getByRole('button', { name: 'Close notebook' }).click();
+      await expect(notebook(page)).toHaveCount(0);
 
       await expect(markers(page)).toHaveCount(1);
       await markers(page).click();
-      await expect(panel(page)).toBeVisible();
-      const note = panel(page).locator('.rf-note[data-focused]');
-      await expect(note).toHaveCount(1);
-      await expect(note.locator('.rf-note-read')).toBeFocused();
-      await expect(note).toContainText('About these pages');
+      await expect(notebook(page)).toBeVisible();
+      await expect(notebook(page).getByRole('tab', { name: 'Page 1' })).toHaveAttribute('aria-selected', 'true');
     });
 
     test('Link to current selection moves a note to the selected passage', async ({ page, api }) => {
+      api.notes = [typed(kind)];
       await openReader(page);
-      await page.getByRole('button', { name: /^Notes/ }).click();
-      await panel(page).getByRole('button', { name: 'Text' }).click();
-      await expect(panel(page).getByRole('textbox', { name: /^Note at / })).toBeFocused();
-      await expect.poll(() => api.notes.length).toBe(1);
-      await page.keyboard.press('Escape'); // out of the editor; the panel stays
+      await openNotepad(page);
       const line = await select(page, 'lamp', 'circle');
       await panel(page).getByRole('button', { name: /to the current selection$/ }).click();
       await expect.poll(() => api.notePatches.filter((p) => p.anchors).length).toBe(1);
@@ -116,12 +126,9 @@ for (const kind of ['pdf', 'epub']) {
 }
 
 test('Link to current selection without a selection says what to do and changes nothing', async ({ page, api }) => {
+  api.notes = [typed('pdf')];
   await openReader(page);
-  await page.getByRole('button', { name: /^Notes/ }).click();
-  await panel(page).getByRole('button', { name: 'Text' }).click();
-  await expect(panel(page).getByRole('textbox', { name: /^Note at / })).toBeFocused();
-  await expect.poll(() => api.notes.length).toBe(1);
-  await page.keyboard.press('Escape'); // out of the editor; the panel stays
+  await openNotepad(page);
   await panel(page).getByRole('button', { name: /to the current selection$/ }).click();
   await expect(page.getByText('Select a passage in the book first')).toBeVisible();
   await page.waitForTimeout(1000);
@@ -135,10 +142,9 @@ test.describe('phone', () => {
     await openReader(page);
     const line = await select(page, 'lamp', 'circle');
     await toolbar(page).getByRole('button', { name: 'Add note' }).click();
-    await expect(panel(page).getByRole('textbox', { name: /^Note at / })).toBeFocused();
-    await page.keyboard.press('Escape');
-    await panel(page).getByRole('button', { name: 'Close notes' }).click();
-    await expect(panel(page)).toHaveCount(0);
+    await expect(notebook(page)).toBeVisible();
+    await notebook(page).getByRole('button', { name: 'Close notebook' }).click();
+    await expect(notebook(page)).toHaveCount(0);
     await expectBeside(page, 'epub', line);
     const marker = await markers(page).boundingBox();
     expect(Math.round(marker.width)).toBe(22);

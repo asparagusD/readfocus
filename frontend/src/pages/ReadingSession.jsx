@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { AnimatePresence, m, useReducedMotion } from 'motion/react';
+import { bookRecede } from '../motion/presets';
 import { fetchApi } from '../lib/api';
 import { takeOpened } from '../reader/openAhead';
 import { pollWithBackoff } from '../lib/backoff';
@@ -8,14 +10,17 @@ import { Button } from '../components/ui/Button';
 import { Reader } from '../originalview/Reader';
 import { fromOpenedBook } from '../originalview/bookFile';
 import { ReaderControls } from '../originalview/ReaderControls';
-import { useLamplight } from '../originalview/useLamplight';
+import { fontStep, readerShortcut, zoomStep } from '../originalview/frame';
 import { createRegionSource } from '../originalview/pdf/regions';
 import { createOcrSource } from '../originalview/pdf/ocr';
 import { folioShort } from '../originalview/place';
 import { usePlaceSaver } from '../reader/usePlaceSaver';
 import { ReaderToolbar } from '../reader/ReaderToolbar';
+import { readAloudSupported } from '../reader/useReadAloud';
+import { useSaveCopy } from '../reader/useSaveCopy';
 import { useChromeVisible } from '../reader/useChromeVisible';
 import { ContentsDrawer } from '../reader/ContentsDrawer';
+import { useMedia } from '../reader/useMedia';
 import { useToast } from '../components/ui/toastContext';
 import { createLookupClient, readLookupOn, storeLookupOn } from '../reader/lookup';
 import { useAuth } from '../hooks/useAuth';
@@ -23,15 +28,26 @@ import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { ReadingLamp } from '../illustrations';
 import { StevePanel } from '../steve/StevePanel';
 import { SteveContext } from '../steve/SteveContext';
-import { useSteve } from '../steve/useSteve';
+import { PAGE_TEXT_MAX, useSteve } from '../steve/useSteve';
 import { useAnnotations } from '../annotations/useAnnotations';
+import { useMarkupTool } from '../annotations/useMarkupTool';
+import { usePageMarks } from '../annotations/usePageMarks';
+import { erasedSummary, newStroke } from '../annotations/ink';
+import { newTextBox } from '../annotations/textbox';
+import { MarkupTools } from '../reader/MarkupTools';
 import { SidePanel } from '../notes/SidePanel';
 import { Notepad } from '../notes/Notepad';
+import { Notebook } from '../notes/Notebook';
+import { openingPage, pageFor, pageKey, pagesOf } from '../notes/notebookPages';
+import { answerItems, codeItems, imageItems, latexItems, passageItems, typedLines } from '../notes/notebookItems';
 import { useNotes } from '../notes/useNotes';
-import { chapterOf } from '../notes/place';
+import { notesApi } from '../notes/notesApi';
+import { moveTyped, movedStore, typedNotes } from '../notes/moveTyped';
+import { serveOwnFonts } from '../notes/excalidrawFonts';
+import { chapterOf, reference } from '../notes/place';
+import { base64Of, newPageContent } from '../notes/drawing';
 import { shownRange } from '../notes/sync';
 import { NotesContext } from '../notes/NotesContext';
-import { answerDoc, quoteDoc } from '../notes/fromBook';
 import { useBodyStart } from '../focus/useBodyStart';
 import { beforeBody, chosenStart, startAnchor, startLabel } from '../focus/bodyStart';
 import { useFocusSession } from '../focus/useFocusSession';
@@ -73,6 +89,11 @@ export function ReadingSession() {
   useDocumentTitle(sessionData?.book?.title ? `${sessionData.book.title} · Reading` : 'Reading');
 
   const [zoom, setZoom] = useStored('rf-pdf-zoom', 'fit-page');
+  const [pageView, setPageView] = useStored('rf-pdf-view', 'one'); // C38.4a: Edge's Page view, on this device
+  const [pinned, setPinned] = useStored('rf-toolbar-pinned', true); // C38.4b: Edge's toolbar is pinned until unpinned
+  const [readingAloud, setReadingAloud] = useState(false); // C40.2: the reader is reading aloud
+  const [listening, setListening] = useState(false); // C40.3b: the voice is speaking (focus mode counts it as reading)
+  const onReadAloud = useCallback((open, speaking) => { setReadingAloud(open); setListening(Boolean(open && speaking)); }, []);
   const [settings, setSettings] = useStored('rf-epub-settings', EPUB_SETTINGS);
   const { user } = useAuth();
   // Hover lookup (C12.8): this user's stored choice, or what they just switched to on this visit.
@@ -90,11 +111,17 @@ export function ReadingSession() {
   const opener = useRef(null); // the toolbar button that opened the panel gets focus back
   const steve = useSteve(bookId, steveOpen);
   const notepad = useNotes(bookId);
-  const [drawingOpen, setDrawingOpen] = useState(false); // C22.3: the panel widens while a drawing is open
+  // C37.2 (issue 26): the notebook over 70 % of the screen, the book blurred beside it; it keeps the page it was on.
+  const [notebookOpen, setNotebookOpen] = useState(false);
+  const [notebookPage, setNotebookPage] = useState(null);
+  const notebookOpener = useRef(null);
+  // C37.7: the book recedes as the notebook slides in (rack focus); under reduced motion it blurs in place.
+  const reduced = useReducedMotion();
+  const recede = !notebookOpen ? 'sharp' : reduced ? 'blurred' : 'receded';
   const [entries, setEntries] = useState([]);
   const [quizMeOpen, setQuizMeOpen] = useState(false); // C23.7b
   const [quizMeBusy, setQuizMeBusy] = useState(false);
-  const chromeVisible = useChromeVisible(toolbarFocused || contentsOpen || quizMeOpen);
+  const chromeVisible = useChromeVisible(pinned || toolbarFocused || contentsOpen || quizMeOpen);
   const contentsButton = useRef(null);
   const reader = useRef(null);
   const { toast } = useToast();
@@ -102,7 +129,6 @@ export function ReadingSession() {
   const kind = sessionData?.book?.format === 'epub' ? 'epub' : 'pdf';
   // C18.6d: a PDF's math, code and figure boxes, so lookup skips them (an EPUB's markup already says).
   const regions = useMemo(() => (kind === 'pdf' ? createRegionSource(fetchApi, bookId) : null), [kind, bookId]);
-  const { theme, original, toggleOriginal } = useLamplight(bookId);
   // C19.4: scanned pages get a text layer read by OCR in this browser. A fully scanned book with no chunks
   // opens pages-only (no session, no test) and has every scanned page read in turn; then it is read again.
   const pagesOnly = Boolean(sessionData?.pages_only);
@@ -173,8 +199,51 @@ export function ReadingSession() {
     setStanding(true);
   }, [sessionData, kind]);
 
-  const focus = useFocusSession({ bookId, place, reader, wanted: focusWanted && !pagesOnly });
+  const focus = useFocusSession({ bookId, place, reader, wanted: focusWanted && !pagesOnly, listening });
   const inFocus = !pagesOnly && focus.enabled;
+  const markup = useMarkupTool(kind, !inFocus); // C39.3: Edge's markup tools; off while focus mode has the toolbar
+  const pageMarks = usePageMarks(bookId, kind, place?.kind === 'pdf' ? place.pages : null); // C39.4: ink near the view
+  // C39.6: Add text's boxes: a new one saved and selected, one retyped saved, one emptied deleted with an Undo.
+  const [selectedBox, setSelectedBox] = useState(null);
+  const textBoxes = {
+    style: markup.textStyle,
+    selected: selectedBox,
+    onSelect: setSelectedBox,
+    onPlace: (page, at, value) => pageMarks.create(newTextBox(page, at, value, markup.textStyle))
+      .then((saved) => saved && setSelectedBox(saved.id)),
+    onEdit: (id, data) => pageMarks.change(id, { data }),
+    onRemove: (id) => {
+      const gone = pageMarks.erase([id]);
+      setSelectedBox(null);
+      if (gone.length) toast({ kind: 'neutral', message: 'Text box deleted.', action: { label: 'Undo', onClick: () => pageMarks.restore(gone) } });
+    },
+  };
+  // C39.6c: Add text's menu sets the style of new boxes and restyles the selected one.
+  const restyleText = (change) => {
+    markup.setTextStyle(change);
+    const box = pageMarks.marks.find((m) => m.id === selectedBox && m.kind === 'text' && !m.pending);
+    if (!box) return;
+    const data = { ...box.data, ...(change.size && { size: change.size }), ...(change.width && { width: change.width }) };
+    pageMarks.change(box.id, { ...(change.colour && { color: change.colour }), data });
+  };
+  // C39.5: the eraser takes strokes and highlights away as it passes; when the drag ends one toast offers one Undo.
+  const erased = useRef({ marks: [], annotations: [] });
+  const eraser = {
+    onHit: ({ marks, annotations }) => {
+      erased.current.marks.push(...pageMarks.erase(marks));
+      erased.current.annotations.push(...notes.erase(annotations));
+    },
+    onDone: () => {
+      const batch = erased.current;
+      erased.current = { marks: [], annotations: [] };
+      const said = erasedSummary(batch.marks.length, batch.annotations.length);
+      if (!said) return;
+      toast({ kind: 'neutral', message: said, action: { label: 'Undo', onClick: () => {
+        pageMarks.restore(batch.marks);
+        notes.restore(batch.annotations);
+      } } });
+    },
+  };
   const onRelocate = useCallback((next) => {
     setPlace(next);
     setChapter(next.entry || '');
@@ -182,12 +251,40 @@ export function ReadingSession() {
     const anchor = reader.current?.anchor();
     if (anchor) save({ anchor });
   }, [save]);
+  const [mark, setMark] = useState(null); // C38.8b: the place saved this visit, a small ribbon beside it
   const onBookmark = useCallback((anchor) => {
     if (!anchor) return;
+    setMark(anchor);
     saveNow({ anchor });
     toast({ kind: 'neutral', message: `Place saved at ${folioShort(place?.folio) || 'this page'}.` });
   }, [saveNow, toast, place]);
 
+  // C38.9 (issue 22): Edge's keys for the book's view: Ctrl+Alt+G the page box, Ctrl+\ fit page or width, Ctrl+= and
+  // Ctrl+- zoom a PDF (an EPUB's text size); the browser's own zoom (Ctrl+0, the wheel) is left alone.
+  const pageInput = useRef(null);
+  useEffect(() => {
+    const onKey = (event) => {
+      if (event.defaultPrevented || event.target?.closest?.('[role="dialog"], textarea, [contenteditable="true"]')) return;
+      const shortcut = readerShortcut(event);
+      if (shortcut === 'go-to-page' && pageInput.current) {
+        event.preventDefault();
+        pageInput.current.focus();
+      } else if (shortcut === 'fit' && kind === 'pdf') {
+        event.preventDefault();
+        setZoom(zoom === 'fit-page' ? 'fit-width' : 'fit-page');
+      } else if (shortcut === 'zoom-in' || shortcut === 'zoom-out') {
+        event.preventDefault();
+        const dir = shortcut === 'zoom-in' ? 1 : -1;
+        if (kind === 'pdf') setZoom(zoomStep(zoom, dir));
+        else setSettings({ ...settings, fontSize: fontStep(settings.fontSize ?? 18, dir) });
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [kind, zoom, settings, setZoom, setSettings]);
+
+  // C38.6a (issue 22): from 1024 px the contents are Edge's left pane, beside the pages; below, the drawer.
+  const docked = useMedia('(min-width: 1024px)');
   // The contents (D4): the book's own outline or nav.
   const closeContents = useCallback(() => setContentsOpen(false), []);
   const openContents = () => {
@@ -199,14 +296,20 @@ export function ReadingSession() {
     setContentsOpen((open) => !open);
   };
   const onPickAnnotation = useCallback((annotation) => {
-    setContentsOpen(false);
+    if (!docked) setContentsOpen(false); // C38.6a: the pane stays beside the pages
     const [anchor] = annotation.anchors;
     reader.current?.goTo(anchor.kind === 'epub' ? { cfi: anchor.cfi } : anchor);
-  }, []);
+  }, [docked]);
+  // C38.6b: the Pages tab (a PDF): thumbnails drawn by the reader, a pick goes to the page.
+  const thumbnail = useCallback((n, width) => reader.current?.thumbnail?.(n, width) ?? Promise.resolve(null), []);
+  const onPickPage = useCallback((page) => {
+    if (!docked) setContentsOpen(false);
+    reader.current?.goTo({ kind: 'pdf', page });
+  }, [docked]);
   const onPick = useCallback((entry) => {
-    setContentsOpen(false);
+    if (!docked) setContentsOpen(false);
     reader.current?.goTo(entry.target);
-  }, []);
+  }, [docked]);
   // C23.1: "The book starts here": the page or section shown becomes the body start (the reader's choice wins).
   const { choose } = body;
   const [startPage, setStartPage] = useState('');
@@ -292,7 +395,9 @@ export function ReadingSession() {
   };
   const closeSide = useCallback(() => setSide(null), []);
   const toggleSide = (tab, button) => {
-    if (!side) opener.current = button.current;
+    // C39.3: a tool opened from More tools hides with its panel, so focus comes back to More tools (DEBUG_LOG C39.3b).
+    const el = button.current;
+    if (!side) opener.current = el?.closest('.rf-toolbar-more')?.closest('.rf-toolbar')?.querySelector('.rf-toolbar-more-button') ?? el;
     setSide((now) => (now === tab ? null : tab));
   };
   // A citation chip moves the book to its page or section; the panel stays open.
@@ -306,27 +411,89 @@ export function ReadingSession() {
   }, [onCite]);
   const shown = useMemo(() => shownRange(place), [place]);
   const contentsOf = useCallback(() => reader.current?.toc() ?? [], []);
-  // C22.2b: a new note (text, or C22.3 a drawing) at the selection, else the pages shown; its key, so it opens.
-  const addNote = async (kind) => {
+  const tooEarly = () => toast({ kind: 'warning', message: 'The book is still opening. Try again in a moment.' });
+  // C22.3, C37.2: a new notebook page at the selection, else the pages shown; its key, so it opens.
+  const newPage = async () => {
     const place = await reader.current?.notePlace();
-    if (!place) {
-      toast({ kind: 'warning', message: 'The book is still opening. Try again in a moment.' });
-      return null;
-    }
-    return notepad.create({ kind, scope: place.scope, anchors: place.anchors, position_start: place.start,
-      position_end: place.end, content: kind === 'drawing' ? { elements: [] } : { type: 'doc', content: [{ type: 'paragraph' }] } });
+    if (!place) { tooEarly(); return null; }
+    return notepad.create({ kind: 'drawing', scope: place.scope, anchors: place.anchors, position_start: place.start,
+      position_end: place.end, content: newPageContent() });
   };
-  // C22.4: N or the selection toolbar's Note: a text note at the selection (read before it is cleared), else the
-  // pages shown, opened in the notepad; a margin marker opens the notepad at its notes.
+  // A margin marker of typed or block notes, and the notebook's "All notes", open the notepad's list.
   const [noteRequest, setNoteRequest] = useState(null);
   const openNotes = () => setSide((now) => { if (!now) opener.current = notesButton.current; return 'notes'; });
+  const pages = useMemo(() => pagesOf(notepad.notes), [notepad.notes]);
+  // C37.4 (issue 25, D1 A): the first time the notebook opens, typed notes become pages at their places (each note
+  // deleted only once its page is saved); what fails stays in All notes and is tried at the next opening.
+  const [moving, setMoving] = useState(false);
+  const movingNow = useRef(false);
+  const moveTypedNotes = async () => {
+    if (movingNow.current || notepad.state !== 'ready' || !typedNotes(notepad.notes).length) return;
+    movingNow.current = true;
+    setMoving(true);
+    let result = { moved: 0, failed: 1 };
+    try {
+      serveOwnFonts(); // Excalidraw's fonts from our own origin, before its chunk runs
+      const { facesFor, textElements, TOP_LEFT } = await import('../notes/pageText');
+      result = await moveTyped(notepad.notes, {
+        lines: (note) => { const at = describeNote(note); return typedLines(note.content, reference(at.page, at.chapter)); },
+        elements: async (lines) => { await facesFor(lines); return textElements(lines, TOP_LEFT); },
+        create: (body) => notesApi.create(bookId, body),
+        remove: (id) => notesApi.remove(id),
+        moved: movedStore(),
+      });
+    } catch { /* the editor's chunk did not load: nothing moved, nothing deleted */ }
+    movingNow.current = false;
+    setMoving(false);
+    notepad.reload();
+    if (result.failed) toast({ kind: 'warning', message: "Some typed notes weren't moved yet. They stay in All notes and move the next time you open the notebook." });
+    else if (result.moved) toast({ kind: 'neutral', message: result.moved === 1 ? 'Your typed note is now a page in the notebook.' : `Your ${result.moved} typed notes are now pages in the notebook.` });
+  };
+  const openNotebook = (key = null) => {
+    moveTypedNotes();
+    // The notepad gives way to the notebook (it would cover the book's 30 %); Steve stays, over that 30 %.
+    if (!notebookOpen) notebookOpener.current = side === 'notes' ? notesButton.current : document.activeElement;
+    setSide((now) => (now === 'notes' ? null : now));
+    setNotebookPage((last) => key ?? openingPage(pages, shown, last));
+    setNotebookOpen(true);
+  };
+  // C37.3 (issue 25): every note goes into the notebook, onto the page started last in the place's chapter, else a
+  // new page there (linked to the highlight or region it came from); the notebook opens on it and the editor adds
+  // the lines (notebookItems.js).
+  const [incoming, setIncoming] = useState(null);
+  const whereIs = (place) => {
+    const at = { anchors: place.anchors, position_start: place.start };
+    return reference(reader.current?.pageLabel(at) ?? '', chapterOf(at, reader.current?.toc() ?? []));
+  };
+  const toNotebook = (place, lines, { annotationId = null, regionId = null } = {}) => {
+    if (!place) { tooEarly(); return null; }
+    const key = pageFor(pages, place.start, reader.current?.toc() ?? []) ?? notepad.create({ kind: 'drawing', scope: place.scope,
+      anchors: place.anchors, position_start: place.start, position_end: place.end, content: newPageContent(),
+      ...(annotationId ? { annotation_id: annotationId } : {}), ...(regionId ? { region_id: regionId } : {}) });
+    if (lines.length) setIncoming({ key, lines, n: Date.now() });
+    openNotebook(key);
+    return key;
+  };
+  const passageOfPlace = (place) => (place?.anchors ?? []).map((a) => a.text ?? '').filter(Boolean).join(' ');
+  // N or the selection toolbar's Note: the selected passage (read before it is cleared), else the pages shown.
   const newNote = async () => {
-    const key = await addNote('text');
-    if (!key) return;
-    openNotes();
-    setNoteRequest({ type: 'edit', key, n: Date.now() });
+    const place = await reader.current?.notePlace();
+    toNotebook(place, place && passageOfPlace(place) ? passageItems(passageOfPlace(place), whereIs(place)) : []);
+  };
+  const closeNotebook = useCallback(() => setNotebookOpen(false), []);
+  const doneIncoming = useCallback((n) => setIncoming((now) => (now?.n === n ? null : now)), []);
+  // C37.6: a picture put on a notebook page goes to the reader's notes folder first; a refusal is said once.
+  const uploadPicture = async (blob, pageId) => {
+    try {
+      return await notepad.uploadImage(await base64Of(blob), blob.type, pageId);
+    } catch (err) {
+      toast({ kind: 'warning', message: "That picture wasn't kept: it couldn't be uploaded. It stays on the page until you close it." });
+      throw err;
+    }
   };
   const onOpenNotes = (ids) => {
+    const drawn = ids.map((id) => pages.find((p) => p.id === id || p.key === id)).filter(Boolean);
+    if (drawn.length && drawn.length === ids.length) { openNotebook(pageKey(drawn[0])); return; } // C37.2: pages
     openNotes();
     setNoteRequest({ type: 'focus', ids, n: Date.now() });
   };
@@ -339,50 +506,46 @@ export function ReadingSession() {
     notepad.relink(note.id, place);
     toast({ kind: 'neutral', message: 'Note linked to the selection.' });
   };
-  // C22.6: notes made from the book (block actions, a highlight's chip, a Steve answer, a dragged region): a crop
-  // goes to the notes bucket first, then the note shows at once; `open` reveals it ('focus') or opens it ('edit').
-  const { create: createNote, edit: editNote, uploadImage } = notepad;
-  const dragged = useRef(null);
-  const addFromBook = useCallback(async ({ kind, place, content, imageB64 = null, regionId = null, annotationId = null, open = 'focus' }) => {
+  // C22.6: notes made from the book's blocks; since C37.6 (issue 25, D2 A) every one goes onto a notebook page: code
+  // and an equation with its LaTeX as text (C37.3), a figure or an equation with no LaTeX as its picture (the crop
+  // uploaded to the reader's notes folder first) and its caption.
+  const { edit: editNote, uploadImage } = notepad;
+  const toNotebookRef = useRef(toNotebook);
+  useEffect(() => { toNotebookRef.current = toNotebook; });
+  const addFromBook = useCallback(async ({ kind, place, content, imageB64 = null, regionId = null }) => {
     if (!place) {
       toast({ kind: 'warning', message: "That wasn't added to your notes. Try again." });
       return { key: null, content };
     }
-    let body = content;
-    let local = {};
+    if (kind === 'code' || (kind === 'equation' && content?.latex)) {
+      const lines = kind === 'code' ? codeItems(content.code) : latexItems(content.latex);
+      return { key: toNotebookRef.current(place, lines, { regionId }), content };
+    }
+    const caption = kind === 'figure' ? content?.caption ?? '' : '';
+    let lines = caption ? passageItems(caption) : [];
     if (imageB64) {
       try {
-        const { path, url } = await uploadImage(imageB64);
-        body = { ...content, image_path: path };
-        local = { urls: { [path]: url } };
+        const { path } = await uploadImage(imageB64);
+        lines = imageItems({ dataURL: `data:image/png;base64,${imageB64}`, path, mimeType: 'image/png' }, caption);
       } catch {
-        toast({ kind: 'warning', message: "The picture wasn't saved, so the note is added without it." });
+        toast({ kind: 'warning', message: "The picture wasn't saved, so only its caption goes on the page." });
       }
     }
-    const key = createNote({ kind, scope: place.scope, anchors: place.anchors, position_start: place.start, position_end: place.end,
-      content: body, ...(regionId ? { region_id: regionId } : {}), ...(annotationId ? { annotation_id: annotationId } : {}) }, local);
-    if (open) {
-      setSide((now) => { if (!now) opener.current = notesButton.current; return 'notes'; });
-      setNoteRequest(open === 'edit' ? { type: 'edit', key, n: Date.now() } : { type: 'focus', ids: [key], n: Date.now() });
-    }
-    return { key, content: body };
-  }, [createNote, uploadImage, toast]);
-  const notesActions = useMemo(() => ({
-    add: addFromBook,
-    edit: editNote,
-    drag: (make) => { dragged.current = make; },
-    drop: () => { const make = dragged.current; dragged.current = null; make?.(); },
-  }), [addFromBook, editNote]);
-  const noteOnHighlight = useCallback((annotation) => addFromBook({
-    kind: 'text', open: 'edit', annotationId: annotation.id, content: quoteDoc(annotation.anchors.map((a) => a.text).join(' ')),
-    place: { scope: 'selection', anchors: annotation.anchors, start: annotation.position_start, end: annotation.position_end },
-  }), [addFromBook]);
-  const saveAnswer = useCallback(async ({ text, citations, heading }) => {
-    const place = await reader.current?.notePlace(); // the passage asked about if still selected, else the pages shown
-    const { key } = await addFromBook({ kind: 'text', place, content: answerDoc(text, citations, heading), open: false });
-    if (key) toast({ kind: 'neutral', message: 'Saved to your notes.' });
+    return { key: toNotebookRef.current(place, lines, { regionId }), content };
+  }, [uploadImage, toast]);
+  const notesActions = useMemo(() => ({ add: addFromBook, edit: editNote }), [addFromBook, editNote]);
+  // A highlight's Note: its passage on the notebook page, the page linked to the highlight when it is new.
+  const noteOnHighlight = (annotation) => {
+    const place = { scope: 'selection', anchors: annotation.anchors, start: annotation.position_start, end: annotation.position_end };
+    toNotebook(place, passageItems(passageOfPlace(place), whereIs(place)), { annotationId: annotation.id });
+  };
+  // Steve's Save to notes: his answer and its sources on the page for the passage asked about, else the pages shown.
+  const saveAnswer = async ({ text, citations, heading }) => {
+    const place = await reader.current?.notePlace();
+    const key = toNotebook(place, answerItems(text, citations, heading));
+    if (key) toast({ kind: 'neutral', message: 'Saved to your notebook.' });
     return key;
-  }, [addFromBook, toast]);
+  };
   const { ask: askSteve } = steve;
   const steveOn = steve.state.enabled !== false; // C21.4: Ask Steve entry points hide once his settings say he is off
   const steveActions = useMemo(() => ({
@@ -392,6 +555,18 @@ export function ReadingSession() {
     },
     enabled: steveOn,
   }), [askSteve, steveOn]);
+  // C40.6 (issue 24): Copilot's "Summarize this page": the page most in view (an EPUB's words in view), its words sent as
+  // the selection is, at most PAGE_TEXT_MAX characters.
+  const summarizePage = async () => {
+    const page = await reader.current?.pageWords();
+    const text = (page?.text ?? '').replace(/\s+/g, ' ').trim().slice(0, PAGE_TEXT_MAX);
+    if (!text) {
+      toast({ kind: 'neutral', message: 'This page has no words for Steve to summarize.' });
+      return;
+    }
+    steveActions.askAbout({ question: 'Summarize this page.', mode: 'summarize_page', anchor: page.anchor, pageText: text,
+      label: `Summarize ${page.label}` });
+  };
   const onLookupToggle = () => {
     storeLookupOn(user?.id, !hoverLookup);
     setSwitched({ userId: user?.id, on: !hoverLookup });
@@ -433,40 +608,82 @@ export function ReadingSession() {
     </div>
   );
 
+  // C40.4c: Save and Save as a copy with my marks (a PDF; C40.4d: an EPUB's highlights as Markdown), from the toolbar
+  // or Ctrl+S and Ctrl+Shift+S.
+  const saveCopy = useSaveCopy({ bookId, kind, title: sessionData?.book?.title, reader, annotations: notes.annotations, pageCount: place?.total ?? 0 });
+
   if (loading) return preparing;
 
   const bookTitle = sessionData.book?.title || 'Your book';
 
+  const contents = (
+    <ContentsDrawer
+      open={contentsOpen}
+      onClose={closeContents}
+      entries={entries}
+      current={chapter}
+      onPick={onPick}
+      returnTo={contentsButton}
+      annotations={pagesOnly ? null : notes.annotations}
+      pageOf={(a) => annotationPages.get(a.id) ?? ''}
+      onPickAnnotation={onPickAnnotation}
+      bodyStart={body.bodyStart}
+      startPage={startPage}
+      onStartHere={pagesOnly ? null : startHere}
+      docked={docked}
+      pages={kind === 'pdf' && place?.total ? {
+        total: place.total, current: place.page, labelOf: (n) => reader.current?.pageLabelOf?.(n) ?? String(n), thumbnail, onPick: onPickPage,
+      } : null}
+    />
+  );
+
   return (
-    <div className="rf-reading-page" data-focus={inFocus}>
-      <div className="rf-reading-chrome">
+    <div className="rf-reading-page" data-focus={inFocus} data-notebook={notebookOpen || undefined}>
+      <m.div className="rf-reading-chrome" inert={notebookOpen} variants={bookRecede} initial={false} animate={recede === 'receded' ? 'blurred' : recede}>
         {inFocus ? (
           <FocusBar session={focus.session} readAt={focus.readAt} locked={focusLocked}
             startLabel={startLabel(body.bodyStart)} idle={focus.idle} idleLapsed={focus.idleLapsed} busy={focusBusy}
             onStart={startFocus} onPause={() => focusDo(focus.pause, '')} onResume={() => focusDo(focus.resume, '')}
             onEnd={endFocus} onLeave={focus.readOnly ? () => navigate('/') : leaveFocus} onAnswerIdle={focus.answerIdle}
-            placing={placingRibbon} readOnly={focus.readOnly}
-            onNotes={() => toggleSide('notes', notesButton)} notesOpen={side === 'notes'} notesRef={notesButton}
+            placing={placingRibbon} readOnly={focus.readOnly} folio={place?.folio ?? null}
+            onNotes={() => openNotebook()} notesOpen={notebookOpen} notesRef={notesButton}
             notesCount={notepad.notes.length} onSteve={steveHere ? () => toggleSide('steve', steveButton) : undefined}
-            steveOpen={steveOpen} steveRef={steveButton} />
+            steveOpen={steveOpen} steveRef={steveButton}
+            onReadAloud={readAloudSupported() ? () => reader.current?.readAloud?.() : null} readingAloud={readingAloud} />
         ) : (
         <ReaderToolbar
           bookTitle={bookTitle}
           chapter={chapter}
           onBack={() => navigate('/')}
           visible={chromeVisible}
+          pinned={pinned}
+          onPin={() => setPinned(!pinned)}
           onFocusChange={setToolbarFocused}
           controls={(
             <ReaderControls kind={kind} zoom={zoom} onZoom={setZoom} settings={settings} onSettings={setSettings}
-              lamplight={theme === 'lamplight'} original={original} onOriginal={toggleOriginal} />
+              place={place} onGoToPage={(page) => reader.current?.goTo(kind === 'pdf' ? { kind: 'pdf', page } : { location: page })}
+              pageView={pageView} onPageView={setPageView}
+              onFind={() => reader.current?.openFind?.()} pageInput={pageInput} />
           )}
           onContents={openContents}
           contentsOpen={contentsOpen}
+          contentsDocked={docked}
+          onBookmark={() => reader.current?.saveMark?.()}
+          markup={(
+            <MarkupTools tools={markup.tools} tool={markup.tool} onTool={markup.choose} colour={markup.colour}
+              onColour={markup.setColour} ink={markup.ink} onInk={markup.setInk} text={markup.textStyle}
+              onText={restyleText} status={markup.status} />
+          )}
+          onReadAloud={readAloudSupported() ? () => reader.current?.readAloud?.() : null}
+          readingAloud={readingAloud}
+          file={{ onSave: saveCopy.save, busy: saveCopy.busy, canPick: saveCopy.canPick,
+            hint: kind === 'epub' ? 'Save my highlights as Markdown' : 'Save a copy with my marks',
+            onPrint: saveCopy.print, printHint: kind === 'epub' ? 'Print this chapter' : 'Print with my marks' }}
           contentsRef={contentsButton}
           lookupOn={hoverLookup}
           onLookupToggle={onLookupToggle}
-          onNotes={() => toggleSide('notes', notesButton)}
-          notesOpen={side === 'notes'}
+          onNotes={() => openNotebook()}
+          notesOpen={notebookOpen}
           notesRef={notesButton}
           notesCount={notepad.notes.length}
           onSteve={pagesOnly ? undefined : () => toggleSide('steve', steveButton)}
@@ -495,12 +712,13 @@ export function ReadingSession() {
           ) : null}
         </ReaderToolbar>
         )}
-      </div>
+      </m.div>
 
       <SteveContext.Provider value={steveHere ? steveActions : null}>
       <NotesContext.Provider value={notesActions}>
       <div className="rf-reading-body">
-      <main className="rf-reading-area">
+      {docked && <div className="rf-reading-pane" inert={notebookOpen}>{contents}</div>}
+      <m.main className="rf-reading-area" inert={notebookOpen} variants={bookRecede} initial={false} animate={recede}>
         {/* C13.9: the page's one h1 for assistive tech; the book's own headings are the publisher's. */}
         <h1 className="sr-only">{bookTitle}</h1>
         <Reader
@@ -510,10 +728,12 @@ export function ReadingSession() {
           load={loadFile}
           title={bookTitle}
           zoom={zoom}
+          pageView={pageView}
           settings={settings}
           onReady={locate}
           onRelocate={onRelocate}
           onBookmark={onBookmark}
+          mark={mark}
           onBack={() => navigate('/')}
           opening={!standing}
           placing={placingRibbon && inFocus ? { onSet: setRibbon, onCancel: () => setPlacingRibbon(false) } : null}
@@ -525,6 +745,11 @@ export function ReadingSession() {
           regions={regions}
           ocr={ocr}
           onAnnotate={notes.create}
+          markup={markup.tool ? { tool: markup.tool, colour: markup.colour, ink: markup.ink } : null}
+          marks={pageMarks.marks}
+          onStroke={(page, points) => pageMarks.create(newStroke(page, points, markup.ink))}
+          eraser={eraser}
+          textBoxes={textBoxes}
           annotations={notes.annotations}
           onAnnotationChange={notes.update}
           onAnnotationDelete={notes.remove}
@@ -534,8 +759,11 @@ export function ReadingSession() {
           onAnnotationNote={noteOnHighlight}
           contents={sessionData.book?.toc}
           start={sessionData.position?.anchor}
+          onReadAloud={onReadAloud}
+          onSaveCopy={saveCopy.save}
+          onPrint={saveCopy.print}
         />
-      </main>
+      </m.main>
       {shownSide && (
         <SidePanel
           tabs={[
@@ -546,36 +774,36 @@ export function ReadingSession() {
           onTab={setSide}
           onClose={closeSide}
           returnTo={opener}
-          wide={side === 'notes' && drawingOpen}
+          beside={notebookOpen}
         >
           {shownSide === 'steve' ? (
-            <StevePanel steve={steve} chapter={chapter} onCite={onCite} onClose={closeSide} onSaveNote={saveAnswer} />
+            <StevePanel steve={steve} chapter={chapter} onCite={onCite} onClose={closeSide} onSaveNote={saveAnswer}
+              onSummarizePage={summarizePage} />
           ) : (
             <Notepad notes={notepad.notes} state={notepad.state} statuses={notepad.statuses} describe={describeNote}
               onGoTo={goToNote} onRemove={notepad.remove} onReload={notepad.reload} onRetry={notepad.flush}
-              onKeepMine={notepad.keepMine} onTakeTheirs={notepad.takeTheirs} onChange={notepad.edit} onAdd={addNote} onThumbnail={notepad.attachThumbnail} onDrawing={setDrawingOpen}
+              onKeepMine={notepad.keepMine} onTakeTheirs={notepad.takeTheirs} onChange={notepad.edit}
+              onOpenPage={(note) => openNotebook(pageKey(note))} onNotebook={() => openNotebook()}
               onRelink={relinkNote} request={noteRequest} range={shown} contents={contentsOf} />
           )}
         </SidePanel>
       )}
       </div>
+      <AnimatePresence>
+      {notebookOpen && (
+        <Notebook key="notebook" title={bookTitle} pages={pages} state={notepad.state} statuses={notepad.statuses} range={shown}
+          describe={describeNote} current={notebookPage} onPage={setNotebookPage} onNew={newPage}
+          onChange={notepad.edit} onThumbnail={notepad.attachThumbnail} onRemove={notepad.remove} onGoTo={goToNote}
+          onRetry={notepad.flush} onKeepMine={notepad.keepMine} onTakeTheirs={notepad.takeTheirs} onReload={notepad.reload}
+          onClose={closeNotebook} returnTo={notebookOpener} beside={Boolean(shownSide)}
+          total={notepad.notes.length} onAll={openNotes} incoming={incoming} onIncoming={doneIncoming} moving={moving}
+          onUpload={uploadPicture} />
+      )}
+      </AnimatePresence>
       </NotesContext.Provider>
       </SteveContext.Provider>
 
-      <ContentsDrawer
-        open={contentsOpen}
-        onClose={closeContents}
-        entries={entries}
-        current={chapter}
-        onPick={onPick}
-        returnTo={contentsButton}
-        annotations={pagesOnly ? null : notes.annotations}
-        pageOf={(a) => annotationPages.get(a.id) ?? ''}
-        onPickAnnotation={onPickAnnotation}
-        bodyStart={body.bodyStart}
-        startPage={startPage}
-        onStartHere={pagesOnly ? null : startHere}
-      />
+      {!docked && contents}
 
       <ReadyModal open={Boolean(focusReady)} sessionId={focus.session?.id} label={focusReady?.label}
         points={focus.session?.points_time ?? 0} onLater={() => setFocusReady(null)}

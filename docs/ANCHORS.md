@@ -190,8 +190,9 @@ document.
 
 - **Storage** (migration 027): a `note_blocks` row carries `anchors` and
   `position_start` / `position_end` exactly as A10, plus `scope`.
-- **Scope `selection`**: "Note" in the selection toolbar, N with a
-  selection, or the notepad's Text / Drawing pills while text is selected.
+- **Scope `selection`**: "Note" in the selection toolbar or N with a
+  selection (since C37.3 a notebook page; the notepad's Text / Drawing
+  pills are gone).
   The anchors and positions are the selection's, as for a highlight (one
   PDF anchor per page with a quad per line, or one EPUB range CFI), with
   their text.
@@ -215,3 +216,48 @@ document.
 - **Not yet built:** re-finding a moved passage (A5) and flagging
   `orphaned`; an EPUB note whose CFI no longer resolves has no marker but
   stays in the notepad.
+
+## A12. Page marks and comments (C39, issue 23)
+
+Storage and API from C39.1 (migration 036 applied 2026-11-22); the tools as built in C39.3-C39.8, below.
+
+- **Storage** (migration 036): one `page_marks` row per ink stroke or
+  text box on a PDF page (`kind` ink or text; EPUBs take none, D2).
+  `data` is in PDF points from the page's top-left (A1): a stroke's
+  `points` `[x, y, pressure]` (pressure 0-1, a tap is one point) and its
+  `width`; a text box's `x`, `y` (its top-left), `width`, `text` and font
+  `size`. Every coordinate is below 10,000 points (A4).
+- **Position** (A4): set by the server, `page * 1e6 + floor(top) * 1e2`,
+  the top being the stroke's highest point or the box's `y`; no x term
+  (the server has no page width). It follows a moved box.
+- **Colours** (A8): marks take `--mark-*` names (`ink`, `poppy`, `amber`,
+  `fern`, `ocean`, `berry`, `plum`); highlights Edge's set (D3), the five
+  first names kept so older rows stay valid.
+- **Comments** (D1): `annotations.comment`, plain text up to 1,000
+  characters, trimmed; an empty one clears it.
+- **API** (`backend/routers/page_marks.py`): `GET /books/{id}/marks`
+  (`first`, `last` pages), `POST`, `PATCH /marks/{id}` (colour or data;
+  the kind and page stay), `DELETE` (a hard delete, as annotations: Undo
+  re-creates). Owner only, 404 otherwise; an EPUB is 409.
+- **The tools** (C39.3-C39.8, `annotations/markup.js`, `reader/MarkupTools.jsx`):
+  Edge's group in the toolbar: Add text, Draw and Erase (PDF only, D2) and
+  Highlight (both kinds). A tool stays on until Escape, a second press or
+  another tool. The highlighter turns each settled selection into a
+  highlight at once (`Reader.jsx`).
+- **Ink** (`originalview/pdf/InkLayer.jsx`, `annotations/ink.js`): an SVG
+  over the text layer whose viewBox is the page in points, so zoom and Page
+  view only rescale it; a stroke's points are page points (a 0.75 pt step,
+  2,000 at most), drawn as a filled outline whose width follows a pen's
+  pressure. Marks load 20 pages at a time round the pages in view
+  (`usePageMarks`, `GET ?first&last`).
+- **Erase**: a drag (or a pen's eraser end while drawing) takes away each
+  whole stroke and PDF highlight within 8 screen px of its path; one Undo
+  per drag re-creates them (new ids).
+- **Text boxes** (`originalview/pdf/TextBoxes.jsx`, `annotations/textbox.js`):
+  placed where pressed (or by Enter) and kept inside the page; a box's
+  left, top, width and font size are its points times the page's scale.
+  The eraser does not take a box: emptying it deletes it.
+- **Comments** (`CommentEditor.jsx`, `CommentMarkers.jsx`): on a selection
+  the highlight and its comment are one `POST`; on a highlight a `PATCH`.
+  A comment's icon is placed through the renderer's `noteSpots`, as a note
+  marker, and laid out with the note markers as obstacles.

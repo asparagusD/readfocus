@@ -371,7 +371,7 @@ def test_a_session_started_under_older_rules_is_stamped_with_the_rules_that_scor
     focus_row(api, sid)["rules_version"] = "2026-11-15"  # started before the bump
     api.client.post(f"/focus/{sid}/quiz")
     answer(api, sid, [q["answer"] for q in stored_questions(api, sid)])
-    assert focus_row(api, sid)["rules_version"] == store.policy.RULES_VERSION == "2026-11-15.2"
+    assert focus_row(api, sid)["rules_version"] == store.policy.RULES_VERSION == "2026-11-22"
 
 
 def test_the_test_endpoints_refuse_a_focus_quiz(api):

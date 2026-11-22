@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { Hourglass, Lock, LogOut, MessageSquareText, NotebookPen, Pause, Play } from 'lucide-react';
+import { Hourglass, Lock, LogOut, MessageSquareText, NotebookPen, Pause, Play, Speech } from 'lucide-react';
 import { CAP_S, noticeDue, shownSeconds, spokenTime, stopwatch } from './clock';
 import './FocusBar.css';
 
@@ -9,13 +9,17 @@ import './FocusBar.css';
  * says why), then 00:00 with Start, then the server's time running on between its reads (mm:ss, then h:mm;
  * a breathing dot, still under reduced motion). Right, Pause focus / Resume, End session and Exit focus.
  * Under it, "Still with the book?" after ten quiet minutes and the 2 h 45 notice; neither blocks reading.
+ * C38.4c: `folio` (a PDF's page, "p. 3 of 6"; the PDF has no footer now) leads the caption.
  * C23.8: `readOnly` (another tab writes the session): the time only, no Pause, Resume or End, no idle prompt.
  * C31.1 (issue 3): Notes and Steve, as on the toolbar, open the side panel beside the book; the clock runs on
  * while it is open. Without `onSteve` (a scan read page by page, or a session waiting for its quiz) Steve is left out.
+ * C40.3b (issue 24): Read aloud (`onReadAloud`, pressed while `readingAloud`), as on the toolbar; listening counts as
+ * reading (F6).
  */
 export function FocusBar({
   session, readAt, locked, startLabel, idle, idleLapsed, busy, onStart, onPause, onResume, onEnd, onLeave, onAnswerIdle,
-  placing = false, readOnly = false, onNotes, notesOpen, notesRef, notesCount, onSteve, steveOpen, steveRef,
+  placing = false, readOnly = false, folio = null, onNotes, notesOpen, notesRef, notesCount, onSteve, steveOpen, steveRef,
+  onReadAloud = null, readingAloud = false,
 }) {
   const [now, setNow] = useState(() => Date.now());
   const [why, setWhy] = useState(false);
@@ -69,15 +73,21 @@ export function FocusBar({
               {session?.state === 'hidden' && status === 'active' && <span className="rf-focus-state">Paused while away</span>}
             </div>
           )}
-          <p className="rf-focus-caption">{readOnly
+          <p className="rf-focus-caption">{folio && `${folio} · `}{readOnly
             ? 'Focus is running in another tab · this one only shows its time'
             : 'Focus · badges are tucked away'}</p>
         </div>
         <div className="rf-focus-actions">
           {onNotes && (
-            <button type="button" className="rf-focus-button" ref={notesRef} onClick={onNotes} aria-expanded={notesOpen}
-              aria-controls={notesOpen ? 'rf-side-panel' : undefined} aria-label={notesCount ? `Notes, ${notesCount}` : 'Notes'}>
+            <button type="button" className="rf-focus-button" ref={notesRef} onClick={onNotes} aria-haspopup="dialog" aria-expanded={notesOpen}
+              aria-controls={notesOpen ? 'rf-notebook' : undefined} aria-label={notesCount ? `Notes, ${notesCount}` : 'Notes'}>
               <NotebookPen size={16} strokeWidth={1.75} aria-hidden="true" /><span className="rf-focus-label">Notes</span>
+            </button>
+          )}
+          {onReadAloud && (
+            <button type="button" className="rf-focus-button" onClick={onReadAloud} aria-pressed={readingAloud}
+              aria-label="Read aloud" aria-keyshortcuts="Control+Shift+U" title={readingAloud ? 'Stop reading aloud (Ctrl+Shift+U)' : 'Read aloud (Ctrl+Shift+U)'}>
+              <Speech size={16} strokeWidth={1.75} aria-hidden="true" /><span className="rf-focus-label">Read aloud</span>
             </button>
           )}
           {onSteve && (
@@ -103,7 +113,7 @@ export function FocusBar({
           )}
           {(status === 'active' || status === 'paused' || status === 'awaiting_quiz') && !readOnly && (
             <button type="button" className="rf-focus-button rf-focus-button--primary" onClick={onEnd} disabled={busy}>
-              End session
+              End<span className="rf-focus-end-rest"> session</span>
             </button>
           )}
           <button type="button" className="rf-focus-button rf-focus-exit" onClick={onLeave} aria-label="Exit focus mode">

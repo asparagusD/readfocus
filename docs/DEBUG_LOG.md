@@ -5597,3 +5597,474 @@ in-memory database capped at 1000 rows per select). Failed before the fix (`git 
 
 ### Commit
 fix(ingest): read every page's text of a book over 1,000 pages
+
+## 2026-11-20 C37.7 — four note tests measure the book while it is still coming forward
+
+**Status:** fixed (in the tests; the motion is meant)
+
+### Symptom
+The full e2e run with C37.7's rack focus: 358 passed, 4 failed. `notes.spec.js` "Add note writes the passage…" (pdf,
+epub): the second passage written was "sm", not "small". `notes-anchor.spec.js` "Add note starts a page…" (pdf):
+the marker was not "outside the page"; "phone › the marker is a smaller circle…": its width was 21 px, not 22.
+
+### Repro
+`npx playwright test e2e/notes.spec.js e2e/notes-anchor.spec.js` (frontend): the same 4 fail every run.
+
+### Hypotheses
+1. The book now recedes (scale 0.97) while the notebook is open and comes forward over about 450 ms after it
+   closes; these tests select words or measure the marker right after the close, while it still moves. Evidence:
+   22 x 0.97 = 21.3; "sm" is a drag that ended where "small" was a moment before. Ruled out if: waiting for the book
+   at rest still fails. Result: confirmed (12 of 12 pass with the wait).
+2. The notebook's leaving layer still catches the drag. Ruled out: it has `pointer-events: none` and the first
+   letters of the drag landed in the book.
+
+### Root cause
+The tests' `select` (`notes.spec.js`) and `expectBeside` (`notes-anchor.spec.js`) read word and marker boxes
+before the book's return transform had finished.
+
+### Fix
+`fixtures.js` `bookAtRest(page)`: polls until `.rf-reading-area` has no transform, no filter and full opacity;
+`select` in `notes.spec.js` and `expectBeside` in `notes-anchor.spec.js` wait for it first.
+
+### Regression test
+The 4 tests themselves, which failed before the wait and pass after; the C37.7 tests in `notes-drawing.spec.js`
+check the book has no transform or filter once the notebook has gone.
+
+### Commit
+feat(ui): rack-focus the book as the notebook opens and closes
+
+## 2026-11-20 C38.1 — notepad "empty, failed load and Try again" timed out once
+
+**Status:** not reproduced (watch)
+
+### Symptom
+The full e2e run for C38.1: 362 passed, 1 failed. `notepad.spec.js` "empty, failed load and Try again" hit the
+30 s test timeout after `page.reload()`; the log shows the reload's requests up to `PUT /books/e2e-book/position`
+and nothing after. The page snapshot was overwritten by the rerun below before it was read.
+
+### Repro
+Not reproduced: the test alone 5 of 5; `notepad.spec.js` with `--repeat-each=3` 27 of 27; the full suite again
+363 of 363 (14.8 min).
+
+### Hypotheses
+1. C38.1 changed it. Ruled out: `originalview/scroll.js` is imported by nothing yet, and `focus/clock.js`
+   `pageKey` returns what it did for a place without `main` (unit tests), which every place is today.
+2. A slow reload or a held route in a long run (this test reroutes `/notes` to fail twice). Not tested; it has
+   not failed before in this session's six full runs.
+
+### Root cause
+Unknown.
+
+### Fix
+None. If it fails again, keep the trace (`trace: 'retain-on-failure'`) and read `error-context.md` first.
+
+### Regression test
+None.
+
+### Commit
+feat(frontend): add the place model for a scrolled book (C38.1)
+
+## 2026-11-20 C38.4a — the end of a PDF slips back to its last page; the two-page helper picks page 1
+
+**Status:** fixed
+
+### Symptom
+The full e2e run for C38.4a: 361 passed, 5 failed. `reading.spec.js` (pdf) "the last page…" and "a theme change or
+resize on the closing page…": after End the live region said "p. 4 of 6" (the last page's label), not "End of the
+book". `focus-end.spec.js` (3 tests): `twoPagesInView` never saw two pages in view.
+
+### Repro
+`npx playwright test e2e/focus-end.spec.js e2e/reading.spec.js`: 4 of the 5 every run (the fifth in the full run).
+A trace after End: the scroll box's height went from 746 to 698 px and the view stopped at the last page's top.
+
+### Hypotheses
+1. End changes the chapter to "Chapter 2 Noise"; the toolbar's title grows, and with the new page box and Page view
+   the pill no longer fits one row at 1440 and wraps; the book area loses 48 px, fit-page lays the pages out again,
+   and the hold keeps the last page's top, not the closing words below it. Evidence: the trace's 746 to 698 and the
+   slots' heights 714 to 666. Result: confirmed.
+2. The helper looks for the first page below the view's top + 1 px; since C38.4a's hold keeps the top of the book at
+   0 (the gap above page 1), that is page 1 itself. Evidence: the helper's log, `top: 0`, `next.top: 16`. Result:
+   confirmed.
+
+### Root cause
+`PdfBook.jsx` held only the words at the top of the view through a new layout, so a reader at the very end was moved
+off it; the toolbar title's 32ch let the pill wrap. `fixtures.js` `twoPagesInView` assumed the view rests on page 1's
+top.
+
+### Fix
+`PdfBook.jsx`: a view scrolled to the very end stays at the end through a new layout. `ReaderToolbar.css`: the title is
+at most 24ch. `fixtures.js`: the page below the one at the top (more than 32 px below the view's top).
+
+### Regression test
+`reading.spec.js` (pdf, both closing-page tests: the theme change and the resize relayout the pages at the end) and
+the three `focus-end.spec.js` tests; 48 of 48 in `focus-end`, `reading` and `reader` after the fix.
+
+### Commit
+feat(ui): add Edge's page box and Page view for a PDF
+
+## 2026-11-20 C38.4c — the PDF page-turn bench ran at 25.2 fps once
+
+**Status:** not reproduced (watch)
+
+### Symptom
+The full e2e run for C38.4c: 368 passed, 1 failed. `reader.spec.js` "page-turn frame rate" (pdf, the frame-rate
+project): 25.2 fps against its floor of 30.
+
+### Repro
+Not reproduced: `npx playwright test e2e/reader.spec.js --project=frame-rate --repeat-each=3`: 75 fps on every run, PDF
+and EPUB, worst frame 13.5-13.8 ms, none over 33 ms.
+
+### Hypotheses
+1. C38.4c's taller pages (no footer, so fit-page draws them larger) cost frames when a step draws new canvases.
+   Against: the bench alone holds headless Edge's 75 fps ceiling three times.
+2. The machine was loaded near the end of a 15-minute run. Not tested directly.
+
+### Root cause
+Unknown; most likely load on the machine (hypothesis 2).
+
+### Fix
+None. The scroll bench of C38.10 replaces this one.
+
+### Regression test
+None.
+
+### Commit
+feat(ui): retire a PDF's footer; its page in the toolbar and the focus bar
+
+## 2026-11-21 C38.7a — a scrolled EPUB's place went stale after a jump and moved on a line at every relayout
+
+**Status:** fixed
+
+### Symptom
+With foliate's scrolled flow: after End (or any jump that left the view where it was), the reader's next scroll was
+not reported, so the place, the end of the book and its closing card stayed stale (`data-ending` never set). A resize,
+a text-size change or the side panel opening moved the place on a line each time (1:1266 to 1:1360 at 1100 px), so a
+note on the first line was no longer "here" and a reload came back a line later.
+
+### Repro
+A probe spec (scratch): open reflow.epub, End, wheel down, read `.rf-ov[data-start]`; and ArrowRight, then three
+viewport sizes, reading the start after each.
+
+### Hypotheses
+1. foliate's paginator marks the scroll after an anchoring as its own (`#justAnchored`) and skips reporting it; when
+   the anchoring did not move the view, no scroll event consumes the mark, so the reader's first scroll is skipped.
+   Evidence: `#scrollTo` calls `#afterScroll(reason)` on an unchanged position. Result: confirmed (fixed by clearing
+   the mark there).
+2. foliate's default 48 px margin offsets anchoring and the visible range. Result: part of it (margin 0 alone left the
+   drift).
+3. `getVisibleRange` counts a line as in view only when its top is below the view's top (`q.left > start`), and
+   `#scrollToRect` scrolls a line's top exactly to that edge, so the anchored line drops out. Result: confirmed.
+
+### Root cause
+Two edge cases in foliate's scrolled flow (`paginator.js`): an unmoved anchoring left the skip mark set, and anchoring
+put the line exactly on the edge the visible range excludes.
+
+### Fix
+`paginator.js` (three lines marked "ReadFocus change", recorded in the vendor README): clear the mark when the view
+did not move; scroll a pixel above the anchor's line. `engine.js`: margin 0.
+
+### Regression test
+`reader.spec.js` epub: a resize keeps the place, a text-size change and a reload keep the saved anchor, End shows the
+closing card; `notes.spec.js` epub: the note stays "here" after the side panel opens; `reading.spec.js` epub: a resize
+at the end keeps the closing card.
+
+### Commit
+feat(ui): scroll an EPUB on the desk, as a PDF; retire its paged frame
+
+## 2026-11-21 C38.7b — an EPUB's margin marker sat 44 px below its passage after the notebook closed
+
+**Status:** fixed
+
+### Symptom
+The full e2e run for C38.7b: 379 passed, 1 failed. `notes-anchor.spec.js` (epub) "Add note starts a page at the
+selection…": "marker at 177.2, line at 132.7", 44.5 px apart, on every run.
+
+### Repro
+`npx playwright test e2e/notes-anchor.spec.js:65` (3 of 3), and a probe logging the first line's top, the place and
+the toolbar's height while the notebook opens.
+
+### Hypotheses
+1. The new page box (C38.7b) widened the EPUB's toolbar until, at 1440 px, the Notes count badge wrapped it onto two
+   rows; the book lost 48 px, foliate re-anchored and the text moved. Evidence: removing the page box made the probe
+   steady; the toolbar 54 to 102 px tall as the notebook opened. Result: confirmed (also: at 1280 the bar wrapped for
+   both kinds already, missed by C38.4b's 1440 and 1024 review).
+2. A fit check would move the tools out, but its first version flipped every frame: More tools sits inside the end
+   group, so "in the bar" was true for the closed panel and cached a width of 0. Evidence: logged need and room
+   alternating 1351 and 962. Result: confirmed.
+
+### Root cause
+`ReaderToolbar.jsx` put Look up, Steve, Focus and the session's tools in the bar from a fixed 1280 px, whatever the
+title, the book's controls or the notes count left room for, so the bar wrapped and every wrap re-laid out the book.
+
+### Fix
+`ReaderToolbar.jsx` `useFits`: the tools sit in the bar only while they fit on one row with 40 px to spare (a
+ResizeObserver over the bar and its groups; their width kept from when they were last directly in the end group).
+
+### Regression test
+`reader.spec.js` "toolbar on one row" (pdf, epub, at 1280 and 1440, still one row once settled); `notes-anchor.spec.js`
+epub passes; the C38.4b More tools tests at 1024 and 375 pass.
+
+### Commit
+feat(ui): give an EPUB the page box; keep the toolbar on one row
+
+## 2026-11-21 C39.2b — More colours was a 28 px button, under the toolbar's 36 px
+
+### Failure
+`npm --prefix frontend run test:e2e`: 389 passed, 1 failed: `annotations-toolbar.spec.js` "on a phone, in lamplight
+› the toolbar fits the screen and stays clear of the selection": `expect(Math.min(box.width, box.height))
+.toBeGreaterThanOrEqual(36)`, received 28.
+
+### Reproduce
+`npx playwright test e2e/annotations-toolbar.spec.js`: the same assertion, every run.
+
+### Hypotheses
+1. C39.2b's new More colours button set `min-inline-size: 28px` (a narrow chevron beside the dots) on a mouse, under
+   the handoff's 36 px for every toolbar button. Evidence: the failing button is the only 28 px one; the 375 px phone
+   test in that spec runs without touch emulation, so the 44 px touch rule did not apply. Result: confirmed.
+
+### Root cause
+`SelectionToolbar.css` gave `.rf-seltool-more` its own width (28 px, 44 px by touch) instead of the bar's button size.
+
+### Fix
+`SelectionToolbar.css`: the override removed; More colours takes the bar's 36 px (44 px by touch) like every button.
+
+### Regression test
+The failing test itself (`annotations-toolbar.spec.js`, every button at least 36 px) and `colours.spec.js` "on a
+phone" (44 px targets by touch) pass: `npx playwright test e2e/annotations-toolbar.spec.js e2e/colours.spec.js
+e2e/annotations-hover.spec.js`: 23 passed.
+
+### Commit
+feat(ui): offer Edge's colours with More colours in the toolbar and chip
+
+## 2026-11-22 C39.3b — 23 e2e tests could not reach Look up, Steve, Focus and Quiz me
+
+### Failure
+`npm --prefix frontend run test:e2e`: 372 passed, 23 failed, in annotations-hover, focus-mode, focus (5), notepad,
+notes-blocks (3), notes-drawing (3), quiz-me (5), reader, steve-blocks and steve-panel (2): `locator.click: Test
+timeout` waiting for `switch "Focus mode"`, `button "Ask Steve"`, `button "Quiz me"` or `switch "Look up words on
+hover"`; two `toBeFocused` on Ask Steve after the panel closed.
+
+### Reproduce
+The same specs alone, every run, at the e2e viewport (1440 x 900).
+
+### Hypotheses
+1. C39.3b put Edge's markup tools in the bar, and by your decision at C39.3 they keep their place, so at 1440 Look up,
+   Steve, Focus and Quiz me now sit in More tools (they did only below about 1400 px); the specs clicked them in the
+   bar. Evidence: before and after probes at 1280, 1440, 1600: the reading tools in the bar at 1440 before, in More
+   tools after. Result: confirmed for 20 of the 23.
+2. Closing the Steve panel gives focus back to the button that opened it, which is hidden in the closed More tools
+   panel when Steve was opened from there, so focus is lost (true below about 1400 px since C38.7b, now at 1440 too).
+   Evidence: `toggleSide` keeps `button.current` as the opener. Result: confirmed (notepad, steve-panel).
+3. focus-mode's `focusOn` already used `clickTool`, yet timed out on its second turn: a toolbar mounted afresh after
+   focus mode starts with every box in the bar, and is measured only by a ResizeObserver, so for a moment Focus is
+   visible in the bar, `clickTool` clicks there, and then it moves into More tools. Result: confirmed.
+
+### Root cause
+The specs reached the reader's tools in the bar at a width where they are now in More tools; two product faults showed
+with them: focus returned to a hidden opener, and a remounted toolbar showed tools it had no room for until measured.
+
+### Fix
+`ReadingSession.jsx` `toggleSide`: an opener inside More tools gives way to the More tools button. `ReaderToolbar.jsx`
+`useFits`: a layout effect measures once before the first paint, then the ResizeObserver as before. The specs reach
+the four tools through `clickTool` and `reveal`, and expect focus on More tools when Steve is tucked in it.
+
+### Regression test
+The 10 spec files and markup-tools.spec.js: `npx playwright test e2e/annotations-hover.spec.js e2e/focus-mode.spec.js
+e2e/focus.spec.js e2e/notepad.spec.js e2e/notes-blocks.spec.js e2e/notes-drawing.spec.js e2e/quiz-me.spec.js
+e2e/reader.spec.js e2e/steve-blocks.spec.js e2e/steve-panel.spec.js e2e/markup-tools.spec.js`: 126 passed.
+
+### Commit
+feat(ui): highlight each selection at once with Edge's highlighter tool
+
+## 2026-11-22 C39.4b — a scanned book's "Reading this scan" status was in More tools
+
+### Failure
+`npm --prefix frontend run test:e2e`: 399 passed, 1 failed: `ocr.spec.js` "a fully scanned book › opens pages-only,
+reads every page, then prepares its quizzes": `getByText(/^Reading this scan: [0-2] of 2 pages$/)` not visible.
+
+### Reproduce
+`npx playwright test e2e/ocr.spec.js -g "fully scanned"` at the e2e viewport (1440 x 900).
+
+### Hypotheses
+1. C39.4b's Draw joins Highlight in the bar, which by the C39.3 decision keeps its place, so the session's status
+   (with Look up, Steve and Focus) is in More tools at 1440; the spec looked for it in the bar. C38.7b already moves
+   "Preparing the book…" into More tools on a full bar. Result: confirmed (the status is in the closed panel).
+
+### Root cause
+The spec read the status in the bar at a width where it now sits in More tools.
+
+### Fix
+`ocr.spec.js` reveals More tools when the status is tucked in it (`reveal`). No product change.
+
+### Regression test
+`npx playwright test e2e/ocr.spec.js`, then the full e2e suite.
+
+### Commit
+feat(ui): draw ink on PDF pages with Edge's Draw tool
+
+## 2026-11-22 C39.6b — with Add text the markup tools left the bar at 1280
+
+### Failure
+`npx playwright test e2e/markup-tools.spec.js`: "fit › at 1280 the tools sit in the bar…":
+`.rf-toolbar-end > .rf-toolbar-markup` expected 1, received 0.
+
+### Reproduce
+That test, every run; a probe at 1280, 1366 and 1440 (a PDF): the group 260 px wide, in More tools at 1280, in the bar
+at 1366 and 1440, the bar one row at each.
+
+### Hypotheses
+1. Add text is the fourth tool, so the group (260 px) no longer fits beside the book's controls at 1280 even with Look
+   up and the rest in More tools; useFits moves it, by design (your decision at C39.3: the markup tools keep their place
+   while they fit). Result: confirmed by the probe.
+
+### Root cause
+The test's width (1280) was chosen for two tools; with four the group fits from 1366.
+
+### Fix
+`markup-tools.spec.js`: the group in the bar at 1366 and in More tools at 1280. No product change (the 44 px targets
+stay).
+
+### Regression test
+`npx playwright test e2e/markup-tools.spec.js`: 5 passed.
+
+### Commit
+feat(ui): add text boxes to PDF pages with Edge's Add text tool
+
+## 2026-11-22 C39.6 — restyling a text box from the menu saved nothing
+
+### Failure
+`npx playwright test e2e/textbox.spec.js`: "the selected box moves by its handle or the arrow keys; the menu restyles
+it": after picking Berry in Text options, `api.markPatches.at(-1)?.color` stayed undefined (no PATCH was sent);
+moving the same box by its handle and keys did send its PATCHes.
+
+### Reproduce
+That test, every run: select a box with Add text on, open Text options, pick a colour.
+
+### Hypotheses
+1. `usePageMarks.change` read the mark's old value inside its `setMarks` updater and returned when it was still
+   null. React runs an updater at once only when no other update is pending on the component; the menu's
+   `restyleText` first calls `setTextStyle`, an update on the same component (ReadingSession), so the updater was
+   deferred and `before` was null. A move has no update before it, so its updater ran at once. Result: confirmed (a
+   ref of the marks drawn fixes it; the move tests pass either way).
+2. The restyle never reached `change` (no selected box). Evidence: the box showed `data-selected` and the handle.
+   Result: ruled out.
+
+### Root cause
+`change` (C39.6a) and `erase` (C39.5a) learned what they changed from inside a state updater, which React may run
+after the call returns.
+
+### Fix
+`usePageMarks.js`: `current`, a ref of the marks as last drawn; `erase` and `change` read the marks there, then
+update the state.
+
+### Regression test
+`textbox.spec.js` "the selected box moves by its handle or the arrow keys; the menu restyles it" (a colour and a width
+PATCH); `erase.spec.js` and `ink.spec.js` pass: `npx playwright test e2e/textbox.spec.js e2e/erase.spec.js
+e2e/ink.spec.js`: 15 passed.
+
+### Commit
+The fix: feat(frontend): add text-box helpers, mark changes and Add text's style (C39.6a, 6176a18); the test:
+feat(ui): move and restyle a text box (C39.6c)
+
+## 2026-11-22 C39.6c — a Dashboard badge test timed out once in the full run
+
+### Failure
+`npm --prefix frontend run test:e2e`: 409 passed, 1 failed: `dashboard-badges.spec.js` "before any badge the shelf
+nudges kindly": `getByRole('region', { name: 'Badge shelf' })` not found within 5 s.
+
+### Reproduce
+Not reproduced: the spec alone three times, 7 of 7 each time; then a second full run (below).
+
+### Hypotheses
+1. A timing failure under load: this machine's full run takes about 16.8 minutes (CLAUDE.md says about 90 s), and the
+   Dashboard's first paint waited past the 5 s expect timeout. Evidence: not reproduced alone; the Dashboard uses
+   nothing C39.6c changed (TextBoxes, MarkupTools, ReadingSession's restyle, pdf.css). Result: most likely; not proven.
+2. C39.6c changed something the Dashboard renders. Evidence: none of its files are imported by the Dashboard (repo
+   graph). Result: ruled out.
+
+### Root cause
+Not found: a one-off timeout under load, as C38.1's (2026-11-20).
+
+### Fix
+None.
+
+### Regression test
+`npx playwright test e2e/dashboard-badges.spec.js` three times: 7 passed each; a second full e2e run.
+
+### Commit
+feat(ui): move and restyle a text box
+
+## 2026-11-22 C40.4d — read aloud's pause test resumes from another word, once in a full run
+
+**Status:** fixed
+
+### Symptom
+The full e2e run for C40.4d (`npm --prefix frontend run test:e2e`, 436 tests, 18.2 min) failed one test that passed in
+every run since C40.2a; nothing in C40.4d touches read aloud. Playing again after a pause did not start from the
+word marked when it paused:
+
+      1) [e2e] › e2eead-aloud.spec.js:79:1 › pause, play, next and previous paragraph, and stop
+
+        Error: expect(received).toBe(expected) // Object.is equality
+
+        Expected: true
+        Received: false
+
+        Call Log:
+        - Timeout 5000ms exceeded while waiting on the predicate
+
+          90 |
+          91 |   await bar(page).getByRole('button', { name: 'Play' }).click();
+        > 92 |   await expect.poll(async () => (await lastSaid(page)).text.startsWith(held)).toBe(true); // again from the word it stopped on
+             |                                                                               ^
+          93 |
+          94 |   const before = (await lastSaid(page)).text;
+          95 |   await bar(page).getByRole('button', { name: 'Next paragraph' }).click();
+            at I:\readfocus\frontend\e2e\read-aloud.spec.js:92:79
+
+      1 failed
+      435 passed (18.2m)
+
+### Repro
+Not every time: `npx playwright test e2e/read-aloud.spec.js -g "pause, play" --repeat-each=30` in `frontend/`: 30
+passed (1.6 min). Once in four full runs (C40.2b-C40.4d). A deterministic repro at the speaker's level is step 5's.
+
+### Hypotheses
+1. The pause lands between two sentences: the last sentence ended and the next one's utterance began, but its first
+   word boundary has not come yet. The mark still shows the last word of the sentence before (`held`), while play
+   resumes from the new sentence's start (`speech.js` resumes from `from + spoken`, and `spoken` is 0). Evidence: the
+   fake voice sends a sentence's first boundary a timer tick after `speak`; a real voice also starts a beat before
+   its first boundary. Ruled out if: a pause in that gap resumes from the marked word. Result: (below)
+2. A boundary of the cancelled utterance lands after the pause and moves the mark. Evidence: none; the speaker
+   ignores a cancelled utterance's events by token. Ruled out if: the speaker test "a cancelled utterance is ignored"
+   holds. Result: (below)
+3. Load on the machine during the full run (18 min, 436 tests) slows the page so the click lands late. Evidence: it
+   passes alone. Ruled out if: hypothesis 1 reproduces deterministically.
+
+### Hypothesis results (step 5)
+1. Confirmed, deterministically, with a throwaway script over `speech.js` (no code changed): play "One two. Three
+   four.", a boundary on "two.", the first sentence's end (the second begins, no boundary yet), pause, resume. The
+   last word named was "two."; the utterance resumed was "Three four.".
+2. Not needed: 1 explains it. 3: the gap is a timer tick in the fake voice, so it is hit only now and then, more often
+   under the load of a full run.
+
+### Root cause
+`frontend/src/reader/speech.js` (`speak`) named a word only when the voice sent its boundary, never as an utterance
+started. Between one sentence's end and the next one's first boundary the mark stayed on the old sentence's last word,
+while a pause there resumes from the new sentence's start. The reader would see the wrong word marked, and play
+"resume" somewhere else.
+
+### Fix
+`speak` names the utterance's first word as it starts (then its boundary names it again). `readAloud.wordAt` without a
+voice's length now stops before trailing punctuation, as voices' own lengths do, so both name the same word ("four",
+not "four."). The test is unchanged.
+
+### Regression test
+`frontend/src/reader/speech.test.js`: "a pause before the next sentence's first boundary resumes from the word that is
+marked"; with "each word boundary names the word..." (now two names: at the start and at the boundary) and
+`readAloud.test.js` "wordAt maps a boundary..." (+1 case without a length). With `speech.js` and `readAloud.js`
+stashed: 3 failed, 19 passed. With the fix: 22 passed. The e2e test that showed it passes 30 of 30 alone before and
+after (it cannot hit the gap on demand).
+
+### Commit
+fix(ui): mark a sentence's first word as it starts to be read

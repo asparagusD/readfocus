@@ -69,7 +69,7 @@ def test_an_epub_range_is_stored(client):
 
 
 @pytest.mark.parametrize("change", [
-    {"color": "amber"},                                         # not a palette name
+    {"color": "mauve"},                                          # not a palette name
     {"style": "strikethrough"},
     {"anchors": []},
     {"anchors": [dict(PAGE_12, text="")]},                      # a point, not a range (A3)
@@ -135,7 +135,7 @@ def test_style_and_colour_change_and_nothing_else(client, db):
     assert changed.status_code == 200
     assert (changed.json()["color"], changed.json()["style"]) == ("sage", "underline")
     assert changed.json()["anchors"] == made["anchors"] and changed.json()["updated_at"]
-    for bad in ({}, {"color": "amber"}, {"anchors": []}, {"position_start": 1}):
+    for bad in ({}, {"color": "mauve"}, {"anchors": []}, {"position_start": 1}):
         assert client.patch(f"/annotations/{made['id']}", json=bad).status_code == 422
     assert db.tables["annotations"][0]["color"] == "sage"
 
@@ -146,3 +146,31 @@ def test_delete_removes_only_that_annotation(client, db):
     assert client.delete(f"/annotations/{first['id']}").status_code == 204
     assert [a["position_start"] for a in db.tables["annotations"]] == [12_014_015]
     assert client.delete(f"/annotations/{first['id']}").status_code == 404
+
+
+def test_edges_colours_and_the_first_five_are_all_accepted(client, db):
+    """C39.1 (issue 23, D3): Edge's set; the five names readers already have stay valid."""
+    for colour in ("honey", "sage", "sky", "rose", "lilac", "poppy", "amber", "fern", "ocean", "berry"):
+        assert post(client, {**pdf_body(), "color": colour}).status_code == 201
+    assert [a["color"] for a in db.tables["annotations"]][-5:] == ["poppy", "amber", "fern", "ocean", "berry"]
+
+
+def test_a_comment_is_saved_trimmed_changed_and_cleared(client, db):
+    """C39.1 (D1): Edge's Add comment on a highlight: plain text, trimmed; empty or null clears it."""
+    made = post(client, {**pdf_body(), "comment": "  Ask about the tides.  "}).json()
+    assert made["comment"] == "Ask about the tides."
+    plain = post(client, pdf_body(start=12_014_015)).json()
+    assert plain["comment"] is None
+    edited = client.patch(f"/annotations/{made['id']}", json={"comment": "Ask Ms Lee about the tides."}).json()
+    assert edited["comment"] == "Ask Ms Lee about the tides." and edited["color"] == "honey"
+    assert client.patch(f"/annotations/{made['id']}", json={"color": "sky"}).json()["comment"] == edited["comment"]
+    assert client.patch(f"/annotations/{made['id']}", json={"comment": "   "}).json()["comment"] is None
+    client.patch(f"/annotations/{made['id']}", json={"comment": "back"})
+    assert client.patch(f"/annotations/{made['id']}", json={"comment": None}).json()["comment"] is None
+
+
+def test_a_comment_over_the_limit_is_refused(client, db):
+    assert post(client, {**pdf_body(), "comment": "x" * 1_001}).status_code == 422
+    made = post(client, {**pdf_body(), "comment": "x" * 1_000}).json()
+    assert client.patch(f"/annotations/{made['id']}", json={"comment": "y" * 1_001}).status_code == 422
+    assert db.tables["annotations"][0]["comment"] == "x" * 1_000

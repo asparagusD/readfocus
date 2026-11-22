@@ -1,6 +1,6 @@
 // Block actions on a PDF (C20.8b): an equation, a code listing and a figure from the region map offer Explain,
 // Copy as LaTeX and Copy code on hover or keyboard focus. Every call is mocked (fixtures.js).
-import { test, expect, openReader } from './fixtures.js';
+import { test, clickTool, expect, openReader } from './fixtures.js';
 
 const shots = process.env.E2E_SHOTS;
 const EQ = { id: 'r-eq', page: 1, kind: 'math', bbox: [72, 110, 300, 140], inline: false };
@@ -31,7 +31,7 @@ test('an equation offers Explain and Copy as LaTeX; Explain sends a crop to Stev
   await openReader(page);
   await hover(page, EQ);
   const actions = bar(page, 'Equation, page 1');
-  await expect(actions.getByRole('button')).toHaveText(['Explain this equation', 'Copy as LaTeX', 'Add to notes', '']); // C22.6: Add to notes and the drag grip
+  await expect(actions.getByRole('button')).toHaveText(['Explain this equation', 'Copy as LaTeX', 'Add to notes']); // C22.6: Add to notes (C37.3: the drag grip retired)
   const sheet = await page.locator('.rf-pdf-page[data-page="1"]').boundingBox();
   const drawn = await actions.boundingBox();
   expect(drawn.x).toBeGreaterThanOrEqual(sheet.x); // the bar stays on the page
@@ -74,7 +74,7 @@ test('code copies its exact text with no Steve call, and Explain sends the regio
   await openReader(page);
   await hover(page, CODE);
   const actions = bar(page, 'Code, page 1');
-  await expect(actions.getByRole('button')).toHaveText(['Copy code', 'Explain this code', 'Add to notes', '']);
+  await expect(actions.getByRole('button')).toHaveText(['Copy code', 'Explain this code', 'Add to notes']);
   await actions.getByRole('button', { name: 'Copy code' }).click();
   await expect(page.getByText('Code copied.')).toBeVisible();
   // Windows gives text back from its clipboard with CRLF line ends; the text copied is the exact listing.
@@ -122,11 +122,11 @@ test('keyboard: an outline takes focus, Tab reaches the actions, Esc puts them a
 test('with Steve switched off, blocks keep only what stays on the device', async ({ page, api }) => {
   api.steve.enabled = false; // C21.4 follow-up: Steve's entry points hide while he is off (steve-guardrails S2)
   await openReader(page);
-  await page.getByRole('button', { name: 'Ask Steve' }).click(); // the toolbar's Steve: his settings load
+  await clickTool(page, page.getByRole('button', { name: 'Ask Steve' })); // the toolbar's Steve: his settings load
   await expect(page.getByPlaceholder('Turn on Steve to ask')).toBeVisible();
   await page.keyboard.press('Escape');
   await hover(page, CODE);
-  await expect(bar(page, 'Code, page 1').getByRole('button')).toHaveText(['Copy code', 'Add to notes', '']);
+  await expect(bar(page, 'Code, page 1').getByRole('button')).toHaveText(['Copy code', 'Add to notes']);
   await hover(page, EQ);
   await page.waitForTimeout(400);
   await expect(bar(page, 'Equation, page 1')).toHaveCount(0); // Explain and Copy as LaTeX both ask Gemini on a PDF

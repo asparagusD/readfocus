@@ -8,7 +8,7 @@ figure blocks have fixed fields. Sizes are capped from policy.
 import pytest
 
 from backend.agents import policy
-from backend.services.note_content import ContentError, check_content
+from backend.services.note_content import ContentError, check_content, has_words
 
 USER, BOOK = "user-1", "book-1"
 MINE = f"{USER}/{BOOK}/a1b2.webp"
@@ -98,7 +98,7 @@ def test_text_depth_and_length_are_capped():
 
 def test_a_drawing_keeps_its_elements_and_files_in_the_readers_folder():
     scene = {"elements": [{"type": "rectangle", "id": "r1", "x": 1, "y": 2}],
-             "appState": {"viewBackgroundColor": "#fff"},
+             "appState": {"viewBackgroundColor": "#fff", "paper": "ruled"},
              "files": {"f1": {"path": MINE, "mimeType": "image/webp"}}}
     assert check("drawing", scene) == scene
 
@@ -107,6 +107,7 @@ def test_a_drawing_keeps_its_elements_and_files_in_the_readers_folder():
     {"elements": "x"},
     {"elements": [{"type": "rectangle"}] * (policy.NOTE_DRAWING_ELEMENTS_MAX + 1)},
     {"elements": [], "appState": {"collaborators": {}}},                         # app state allow-listed
+    {"elements": [], "appState": {"paper": "lined"}},                            # C37.1: ruled, squared or plain
     {"elements": [], "files": {"f1": {"dataURL": "data:image/png;base64,AAAA", "mimeType": "image/png"}}},
     {"elements": [], "files": {"f1": {"path": "user-2/book-1/a.webp", "mimeType": "image/webp"}}},
     {"elements": [], "files": {"f1": {"path": f"{USER}/{BOOK}/../x.webp", "mimeType": "image/webp"}}},
@@ -115,6 +116,20 @@ def test_a_drawing_keeps_its_elements_and_files_in_the_readers_folder():
 def test_bad_drawings_are_refused(scene):
     with pytest.raises(ContentError):
         check("drawing", scene)
+
+
+@pytest.mark.parametrize(("elements", "words"), [
+    ([{"type": "text", "text": "Fourier"}], True),
+    ([{"type": "rectangle"}, {"type": "text", "text": "  \n"}], False),          # blank text is not words
+    ([{"type": "text", "text": "gone", "isDeleted": True}], False),             # nor a deleted element
+    ([{"type": "text"}], False),
+])
+def test_a_drawing_has_words_when_a_live_text_element_has_text(elements, words):
+    assert has_words("drawing", {"elements": elements}) is words
+
+
+def test_only_a_drawing_has_notebook_words():
+    assert has_words("code", {"code": "x = 1", "language": "python"}) is False
 
 
 def test_equation_code_and_figure_fields():

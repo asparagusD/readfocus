@@ -5,6 +5,8 @@ is the second wall), and another reader's book or annotation is 404. Anchors fol
 spine item, in reading order, A2); position_start and position_end are A4 sortable positions, checked against the
 anchors: the page or spine part always, the line (floor of the quad's top or bottom) for PDF. Their low digits
 (the x term, the EPUB character count) come from the reader, who has the page width and the section's text.
+C39.1 (issue 23, D1): a highlight may carry a comment, Edge's "Add comment": plain text, trimmed; an empty one clears
+it (null). D3: the palette is Edge's set (policy.ANNOTATION_COLORS, migration 036).
 """
 
 from datetime import UTC, datetime
@@ -20,13 +22,15 @@ from backend.services.supabase_client import supabase
 
 router = APIRouter()
 
-COLUMNS = "id, book_id, anchors, position_start, position_end, style, color, text_snapshot, orphaned, created_at, updated_at"
+COLUMNS = ("id, book_id, anchors, position_start, position_end, style, color, comment, text_snapshot, orphaned, "
+           "created_at, updated_at")
 
 
 class Style(BaseModel):
     model_config = ConfigDict(extra="forbid")
     style: str | None = None
     color: str | None = None
+    comment: str | None = Field(default=None, max_length=policy.ANNOTATION_COMMENT_MAX * 2)
 
     @model_validator(mode="after")
     def from_the_palette(self):
@@ -34,6 +38,10 @@ class Style(BaseModel):
             raise ValueError(f"style is one of {policy.ANNOTATION_STYLES}")
         if self.color is not None and self.color not in policy.ANNOTATION_COLORS:
             raise ValueError(f"color is one of {policy.ANNOTATION_COLORS}")
+        if self.comment is not None:
+            self.comment = self.comment.strip() or None  # an emptied comment clears it
+            if self.comment and len(self.comment) > policy.ANNOTATION_COMMENT_MAX:
+                raise ValueError(f"a comment is at most {policy.ANNOTATION_COMMENT_MAX} characters")
         return self
 
 
@@ -83,15 +91,16 @@ def create_annotation(book_id: str, req: NewAnnotation, user_id: str = Depends(g
     anchors = [a.model_dump() for a in req.anchors]
     row = {"user_id": user_id, "book_id": book_id, "anchors": anchors, "style": req.style, "color": req.color,
            "position_start": req.position_start, "position_end": req.position_end, "orphaned": False,
-           "text_snapshot": " ".join(a["text"] for a in anchors)[: policy.ANNOTATION_TEXT_MAX]}
+           "comment": req.comment, "text_snapshot": " ".join(a["text"] for a in anchors)[: policy.ANNOTATION_TEXT_MAX]}
     return supabase.table("annotations").insert(row).execute().data[0]
 
 
 @router.patch("/annotations/{annotation_id}")
 def restyle_annotation(annotation_id: str, req: Style, user_id: str = Depends(get_current_user)):
-    change = req.model_dump(exclude_none=True)
+    change = req.model_dump(include=req.model_fields_set)  # a comment sent empty or null is cleared
+    change = {k: v for k, v in change.items() if v is not None or k == "comment"}
     if not change:
-        raise HTTPException(status_code=422, detail="Give a style or a color")
+        raise HTTPException(status_code=422, detail="Give a style, a color or a comment")
     _mine(annotation_id, user_id)
     change["updated_at"] = datetime.now(UTC).isoformat()
     return supabase.table("annotations").update(change).eq("id", annotation_id).eq("user_id", user_id).execute().data[0]

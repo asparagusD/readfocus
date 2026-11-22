@@ -1,17 +1,26 @@
-// C22.6: things from the book go to the notes. "Add to notes" on a PDF equation (the crop as an image in the notes
-// bucket and its LaTeX, from /steve/latex only while Steve is on), code (the exact text and its language, no
-// Steve call) and a figure (the crop and its caption); on an EPUB equation (LaTeX from its TeX annotation, on the
-// device) and listing; a highlight's chip (a text note quoting the passage, linked to it); a Steve answer ("Save
-// to notes", its citations kept); and dragging an equation onto the notepad. Mocked API (fixtures.js).
-import { test, expect, BOOKS, book, openReader, settled, wordPoint } from './fixtures.js';
+// C22.6: things from the book go to the notes; since C37.3 (issue 25) words go onto a notebook page. "Add to notes"
+// on a PDF equation writes its LaTeX (from /steve/latex while Steve is on; with none, since C37.6, its crop goes on
+// the page as a picture), code writes its exact text (no Steve call), a figure goes on as its picture and caption
+// (C37.6); on an EPUB an equation writes its own LaTeX and a listing its text, on the device; a
+// highlight's chip writes the passage on a page linked to it; a Steve answer ("Save to notes") writes his answer
+// and its sources. Mocked API (fixtures.js).
+import { test, expect, BOOKS, book, clickTool, openReader, settled, wordPoint } from './fixtures.js';
 
 const EQ = { id: 'r-eq', page: 1, kind: 'math', bbox: [72, 110, 300, 140], inline: false };
 const CODE = { id: 'r-code', page: 1, kind: 'code', bbox: [72, 160, 300, 200], inline: false };
 const FIG = { id: 'r-fig', page: 1, kind: 'figure', bbox: [72, 220, 300, 300], inline: false };
 const CODE_TEXT = 'def toll(n):\n    return  2 * n   # two spaces kept';
-const panel = (page) => page.getByRole('complementary', { name: 'Notes' });
 const bar = (page, name) => page.getByRole('toolbar', { name });
-const PNG = /^iVBOR/;
+const shots = process.env.E2E_SHOTS;
+const notebook = (page) => page.getByRole('dialog', { name: 'Notebook' });
+/** The last saved picture on a notebook page: its element and the file the page keeps for it, or null. */
+const picture = (api) => {
+  const scene = api.notePatches.filter((p) => p.content?.files).at(-1)?.content;
+  const element = scene?.elements.find((e) => e.type === 'image');
+  return element && scene.files[element.fileId] ? { element, file: scene.files[element.fileId] } : null;
+};
+/** Every text written on a notebook page, from every save. */
+const written = (api) => api.notePatches.flatMap((p) => (p.content?.elements ?? []).filter((e) => e.type === 'text').map((e) => e.text));
 
 function regions(api) {
   api.regions = [EQ, CODE, FIG];
@@ -32,79 +41,60 @@ async function hover(page, region) {
 test.describe('pdf regions', () => {
   test.beforeEach(({ api }) => { regions(api); api.steve.consented = true; });
 
-  test('an equation goes to the notes as its crop, then its LaTeX', async ({ page, api }) => {
+  test('an equation is written on a notebook page as its LaTeX, asked of Steve first', async ({ page, api }) => {
     await openReader(page);
     await hover(page, EQ);
     await bar(page, 'Equation, page 1').getByRole('button', { name: 'Add to notes' }).click();
-    await expect(panel(page)).toBeVisible();
-    await expect.poll(() => api.notePosts.length).toBe(1);
-    expect(api.noteFilePosts).toHaveLength(1);
-    expect(api.noteFilePosts[0]).toMatchObject({ content_type: 'image/png', data: expect.stringMatching(PNG) });
-    expect(api.noteFilePosts[0].data.length * 0.75).toBeLessThan(256 * 1024);
-    const [post] = api.notePosts;
-    expect(post).toMatchObject({ kind: 'equation', region_id: 'r-eq', scope: 'selection',
-      anchors: [{ kind: 'pdf', page: 1, quads: [EQ.bbox], text: 'a n = 1 / pi' }],
-      content: { latex: '', image_path: expect.stringMatching(/\.png$/) } });
+    await expect(notebook(page)).toBeVisible();
     await expect.poll(() => api.steve.latexAsks.length).toBe(1);
-    await expect.poll(() => api.notes[0]?.content?.latex).toBe('a_n = \\frac{1}{\\pi}');
-    const card = panel(page).locator('.rf-note[data-kind="equation"]');
-    await expect(card.locator('img')).toHaveAttribute('src', /^data:image\/png/);
-    await expect(card.locator('math')).toBeAttached();
-    await expect(card.getByRole('textbox', { name: 'LaTeX' })).toHaveValue('a_n = \\frac{1}{\\pi}');
-    // The LaTeX can be edited; the change autosaves.
-    await card.getByRole('textbox', { name: 'LaTeX' }).fill('a_n = 2');
-    await expect.poll(() => api.notes[0].content.latex, { timeout: 4000 }).toBe('a_n = 2');
+    await expect.poll(() => api.notePosts.length).toBe(1);
+    expect(api.noteFilePosts).toHaveLength(0); // words, no crop
+    expect(api.notePosts[0]).toMatchObject({ kind: 'drawing', region_id: 'r-eq', scope: 'selection',
+      anchors: [{ kind: 'pdf', page: 1, quads: [EQ.bbox], text: 'a n = 1 / pi' }], content: { elements: [] } });
+    await expect.poll(() => written(api), { timeout: 8000 }).toContain('$$a_n = \\frac{1}{\\pi}$$');
   });
 
-  test('code goes as its exact text and language, with no Steve call', async ({ page, api }) => {
+  test('code is written on a notebook page as its exact text, with no Steve call', async ({ page, api }) => {
     await openReader(page);
     await hover(page, CODE);
     await bar(page, 'Code, page 1').getByRole('button', { name: 'Add to notes' }).click();
     await expect.poll(() => api.notePosts.length).toBe(1);
-    expect(api.notePosts[0]).toMatchObject({ kind: 'code', region_id: 'r-code', content: { code: CODE_TEXT, language: 'python' } });
+    expect(api.notePosts[0]).toMatchObject({ kind: 'drawing', region_id: 'r-code' });
+    await expect.poll(() => written(api), { timeout: 8000 }).toContain(CODE_TEXT);
     expect(api.noteFilePosts).toHaveLength(0);
     expect(api.steve.asks).toHaveLength(0);
-    const card = panel(page).locator('.rf-note[data-kind="code"]');
-    await expect(card.getByRole('textbox', { name: 'Code' })).toHaveValue(CODE_TEXT);
-    await expect(card).toContainText('python');
+    expect(api.steve.latexAsks).toHaveLength(0);
   });
 
-  test('a figure goes as its crop and caption', async ({ page, api }) => {
+  test('a figure goes onto a notebook page as its picture and caption', async ({ page, api }) => {
     await openReader(page);
     await hover(page, FIG);
     await bar(page, 'Figure, page 1').getByRole('button', { name: 'Add to notes' }).click();
+    await expect(notebook(page)).toBeVisible();
+    await expect.poll(() => api.noteFilePosts.length).toBe(1);
+    expect(api.noteFilePosts[0].content_type).toBe('image/png'); // the crop, already under 256 KB
     await expect.poll(() => api.notePosts.length).toBe(1);
-    expect(api.notePosts[0]).toMatchObject({ kind: 'figure', region_id: 'r-fig',
-      content: { caption: 'Figure 1. The toll road.', image_path: expect.stringMatching(/\.png$/) } });
-    const card = panel(page).locator('.rf-note[data-kind="figure"]');
-    await expect(card.locator('img')).toBeVisible();
-    await expect(card.getByRole('textbox', { name: 'Caption' })).toHaveValue('Figure 1. The toll road.');
+    expect(api.notePosts[0]).toMatchObject({ kind: 'drawing', region_id: 'r-fig' });
+    await expect.poll(() => picture(api), { timeout: 8000 }).toBeTruthy();
+    const { element, file } = picture(api);
+    expect(file).toEqual({ path: 'e2e-reader/e2e-book/file-1.png', mimeType: 'image/png' });
+    expect(element.width).toBeGreaterThan(0);
+    expect(written(api)).toContain('Figure 1. The toll road.');
+    if (shots) { await page.waitForTimeout(500); await page.screenshot({ path: `${shots}/notebook-figure-1440.png` }); }
   });
 
-  test('with Steve off an equation keeps its crop and an empty LaTeX field, and nothing asks him', async ({ page, api }) => {
+  test('with Steve off an equation goes onto the page as its picture, and nothing asks him', async ({ page, api }) => {
     api.steve.enabled = false;
     await openReader(page);
-    await page.getByRole('button', { name: 'Ask Steve' }).click(); // his settings load: he is off
+    await clickTool(page, page.getByRole('button', { name: 'Ask Steve' })); // his settings load: he is off
     await expect(page.getByRole('complementary', { name: 'Steve' })).toBeVisible();
     await page.getByRole('button', { name: 'Close Steve' }).click();
     await hover(page, EQ);
     await bar(page, 'Equation, page 1').getByRole('button', { name: 'Add to notes' }).click();
     await expect.poll(() => api.notePosts.length).toBe(1);
-    expect(api.notePosts[0].content.latex).toBe('');
-    await page.waitForTimeout(800);
+    expect(api.notePosts[0]).toMatchObject({ kind: 'drawing', region_id: 'r-eq' });
+    await expect.poll(() => picture(api), { timeout: 8000 }).toBeTruthy();
     expect(api.steve.latexAsks).toHaveLength(0);
-    await expect(panel(page).locator('.rf-note[data-kind="equation"]').getByRole('textbox', { name: 'LaTeX' })).toHaveValue('');
-  });
-
-  test('dragging an equation onto the notepad adds it', async ({ page, api }) => {
-    await openReader(page);
-    await page.getByRole('button', { name: /^Notes/ }).click();
-    await hover(page, EQ);
-    const grip = bar(page, 'Equation, page 1').getByRole('button', { name: 'Drag to notes' });
-    await expect(grip).toHaveAttribute('draggable', 'true');
-    await grip.dragTo(panel(page).locator('.rf-notes'));
-    await expect.poll(() => api.notePosts.length).toBe(1);
-    expect(api.notePosts[0]).toMatchObject({ kind: 'equation', region_id: 'r-eq' });
   });
 });
 
@@ -129,8 +119,8 @@ test.describe('epub regions', () => {
     throw new Error(`${selector} never came into view`);
   }
 
-  // Adding a note opens the notepad, which narrows the book (1440 to 1060 px wide) and re-lays its sections out;
-  // `settled` watches the page shown, not where a block sits, so wait for the block's own box to stop moving.
+  // A block can still be moving after the notebook closes (the book comes back into focus); `settled` watches the
+  // page shown, not where a block sits, so wait for the block's own box to stop moving.
   async function still(el) {
     let last = null;
     await expect.poll(async () => {
@@ -150,11 +140,11 @@ test.describe('epub regions', () => {
     await page.getByRole('toolbar', { name: 'Equation, this page' }).getByRole('button', { name: 'Add to notes' }).click();
     await expect.poll(() => api.notePosts.length).toBe(1);
     const [eq] = api.notePosts;
-    expect(eq.kind).toBe('equation');
-    expect(eq.content.latex.length).toBeGreaterThan(0);
-    expect(eq.content.image_path ?? null).toBeNull();
+    expect(eq).toMatchObject({ kind: 'drawing', content: { elements: [] } });
     expect(eq.anchors[0].kind).toBe('epub');
+    await expect.poll(() => written(api).some((t) => /^\$\$.+\$\$$/s.test(t)), { timeout: 8000 }).toBe(true);
     expect(api.steve.latexAsks).toHaveLength(0);
+    await notebook(page).getByRole('button', { name: 'Close notebook' }).click();
 
     const pre = await find(page, 'pre');
     const pbox = await still(pre);
@@ -162,18 +152,13 @@ test.describe('epub regions', () => {
     // the figure, over the listing) then holds the pointer.
     await page.mouse.move(pbox.x + pbox.width / 2, pbox.y + pbox.height / 2);
     await page.getByRole('toolbar', { name: 'Code, this page' }).getByRole('button', { name: 'Add to notes' }).click();
-    await expect.poll(() => api.notePosts.length).toBe(2);
-    expect(api.notePosts[1].kind).toBe('code');
     const code = await pre.textContent();
-    expect(api.notePosts[1].content.code).toBe(code);
-    // Its own characters (A4), not its parent's start: what sync compares with the page shown.
-    const { position_start: start, position_end: end } = api.notePosts[1];
-    expect(end - start).toBe(code.length);
-    expect(start % 1e6).toBeGreaterThan(0);
+    await expect.poll(() => written(api), { timeout: 8000 }).toContain(code);
+    expect(api.notePosts.every((post) => post.kind === 'drawing')).toBe(true); // a second page only in another chapter
   });
 });
 
-test('a highlight\'s Add note writes a text note quoting it, linked to the highlight', async ({ page, api }) => {
+test('a highlight\'s Add note writes the passage on a notebook page linked to the highlight', async ({ page, api }) => {
   await openReader(page);
   const a = await wordPoint(page, 'lamp');
   const b = await wordPoint(page, 'circle');
@@ -183,39 +168,36 @@ test('a highlight\'s Add note writes a text note quoting it, linked to the highl
   await page.mouse.up();
   await page.getByRole('toolbar', { name: 'Highlight the selection' }).getByRole('button', { name: 'Sky highlight', exact: true }).click();
   await expect.poll(() => api.annotations.length).toBe(1);
-  await page.getByRole('switch', { name: 'Look up words on hover' }).click();
+  await clickTool(page, page.getByRole('switch', { name: 'Look up words on hover' }));
   const w = await wordPoint(page, 'small');
   await page.mouse.move(w.x - 20, w.y - 40);
   await page.mouse.move(w.x, w.y, { steps: 4 });
   const chip = page.getByRole('toolbar', { name: /^Sky highlight:/ });
   await chip.getByRole('button', { name: 'Add note' }).click();
-  await expect(panel(page).getByRole('textbox', { name: /^Note at / })).toBeFocused();
+  await expect(notebook(page)).toBeVisible();
   await expect.poll(() => api.notePosts.length).toBe(1);
   const [post] = api.notePosts;
   const highlight = api.annotations[0];
-  expect(post).toMatchObject({ kind: 'text', scope: 'selection', annotation_id: highlight.id, anchors: highlight.anchors,
+  expect(post).toMatchObject({ kind: 'drawing', scope: 'selection', annotation_id: highlight.id, anchors: highlight.anchors,
     position_start: highlight.position_start, position_end: highlight.position_end });
-  expect(post.content.content[0]).toMatchObject({ type: 'blockquote' });
-  expect(JSON.stringify(post.content)).toMatch(/lamp .*circle/);
-  await page.keyboard.type('Why a circle?');
-  await expect.poll(() => JSON.stringify(api.notes[0].content), { timeout: 4000 }).toContain('Why a circle?');
+  await expect.poll(() => written(api).join(' '), { timeout: 8000 }).toMatch(/lamp[\s\S]*circle/);
 });
 
-test('a Steve answer is saved to the notes with its citations', async ({ page, api }) => {
+test('a Steve answer is written on a notebook page with its sources, Steve beside it', async ({ page, api }) => {
   api.steve.consented = true;
   await openReader(page);
-  await page.getByRole('button', { name: 'Ask Steve' }).click();
+  await clickTool(page, page.getByRole('button', { name: 'Ask Steve' }));
   const steve = page.getByRole('complementary', { name: 'Steve' });
   await steve.getByRole('textbox', { name: 'Your question for Steve' }).fill('Why twice?');
   await page.keyboard.press('Enter');
   await expect(steve.getByRole('button', { name: 'Save to notes' })).toBeVisible();
   await steve.getByRole('button', { name: 'Save to notes' }).click();
   await expect.poll(() => api.notePosts.length).toBe(1);
-  const text = JSON.stringify(api.notePosts[0].content);
-  expect(api.notePosts[0].kind).toBe('text');
-  expect(text).toContain('He counts twice [p. 2].');
-  expect(text).toContain('Sources: p. 2');
+  expect(api.notePosts[0].kind).toBe('drawing');
+  await expect(notebook(page)).toBeVisible();
+  await expect(steve).toBeVisible(); // over the book's 30 %
+  await expect.poll(() => written(api), { timeout: 8000 }).toContain('He counts twice [p. 2].');
+  expect(written(api)).toContain('Sources: p. 2');
   await expect(steve.getByRole('button', { name: 'Saved to notes' })).toBeDisabled();
-  await page.getByRole('tab', { name: /^Notes/ }).click();
-  await expect(panel(page).locator('.rf-note')).toContainText('He counts twice [p. 2].');
+  if (shots) { await page.waitForTimeout(600); await page.screenshot({ path: `${shots}/notebook-steve-answer-1440.png` }); }
 });

@@ -56,6 +56,28 @@
   outline-offset: 2px;
 }
 
+/* The ribbon (C38.8b: its rules moved here from frame.css; this is its one use since the desk's ribbon went): over the
+   desk at its top right, a tail in the accent. */
+.rf-ov-ribbon {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-6);
+  z-index: 6;
+  display: flex;
+  justify-content: center;
+  width: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.rf-ov-ribbon-tail {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 86%, 0 100%);
+}
+
 /* Placing: the ribbon is longer and wider (22 x 150), and it can be held and moved. */
 .rf-ov-ribbon--placing { height: 150px; cursor: grab; touch-action: none; }
 .rf-ov-ribbon--placing .rf-ov-ribbon-tail { width: 22px; box-shadow: var(--elevation-accent); }

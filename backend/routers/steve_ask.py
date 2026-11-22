@@ -56,6 +56,8 @@ MESSAGES = {
     "book_not_found": "That book was not found.",
     "region_not_found": "That part of the page was not found.",
     "preparing": "Steve can read this book in a moment: its pages are still being prepared.",
+    "needs_page": "Steve needs the page's words and place to summarize it.",
+    "unexpected_page_text": "A page's words go only with Summarize this page.",
 }
 
 
@@ -66,11 +68,12 @@ class AskRequest(BaseModel):
     thread_id: str | None = Field(default=None, max_length=64)
     question: str = Field(min_length=1, max_length=policy.QUESTION_MAX_CHARS)
     mode: Literal["ask", "explain_highlight", "explain_equation", "latex_equation", "explain_code",
-                  "explain_figure"] = "ask"
+                  "explain_figure", "summarize_selection", "summarize_page"] = "ask"
     anchor: Annotated[PdfAnchor | EpubAnchor, Field(discriminator="kind")] | None = None
     image_png_b64: str | None = None
     region_id: str | None = Field(default=None, max_length=64,
                                   validation_alias=AliasChoices("region_id", "code_region_id"))
+    page_text: str | None = Field(default=None, max_length=policy.PAGE_TEXT_MAX_CHARS)  # C40.6: summarize_page only
     utc_offset_minutes: int = Field(default=0, ge=-policy.UTC_OFFSET_LIMIT_MINUTES,
                                     le=policy.UTC_OFFSET_LIMIT_MINUTES)
 
@@ -132,9 +135,13 @@ async def ask(req: AskRequest, user_id: str = Depends(get_current_user)):
         if thread is None or thread["book_id"] != req.book_id:
             raise fail(404, "thread_not_found")
     anchor = req.anchor.model_dump() if req.anchor else None
+    if req.mode == "summarize_page" and not (anchor and (req.page_text or "").strip()):  # C40.6
+        raise fail(422, "needs_page")
+    if req.page_text is not None and req.mode != "summarize_page":
+        raise fail(422, "unexpected_page_text")
     try:
         ctx = await build_context(user_id=user_id, book_id=req.book_id, question=req.question, anchor=anchor,
-                                  image=image, region_id=req.region_id)
+                                  image=image, region_id=req.region_id, page_text=req.page_text)
         prompt = prompts.build_prompt(ctx, req.mode)
     except (ContextError, prompts.PromptError) as error:
         raise fail(CONTEXT_STATUS.get(error.reason, 422), error.reason) from None

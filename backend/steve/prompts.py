@@ -51,6 +51,15 @@ TASKS = {
         'Task: explain the code in <region kind="code"> exactly as given: what it does, step by step, and how it '
         "relates to the passages. Quote code in a fenced block with its language. Do not change the code unless "
         "the reader asks."),
+    # C40.6 (issue 24): Steve in Copilot's place: Summarize a selection, or the page the reader is on.
+    "summarize_selection": (
+        "Task: summarize the passage in <selection>: its main point in a sentence or two, then at most three key "
+        "points as a short list, in the passage's own order. Use <surrounding> only to make sense of it, and do not "
+        "add what the passage does not say."),
+    "summarize_page": (
+        "Task: summarize the page in <selection>, the page the reader is on: its main point in a sentence or two, "
+        "then at most five key points as a short list, in the order the page makes them. Use the other passages "
+        "only to make sense of it, and do not add what the page does not say."),
     "explain_figure": (
         'Task: explain the figure (the image, and its label and caption in <region kind="figure">) and what it '
         "shows in relation to the passages. Describe only what you can see or read, and say if the image is unclear."),
@@ -64,7 +73,7 @@ ITEM = re.compile(r"(pp?\.|sec\.|§)?\s*([\w.]+)(?:\s*[-–]\s*([\w.]+))?")
 
 
 class PromptError(Exception):
-    """A mode Steve does not have, or one asked without what it explains: unknown_mode, needs_highlight,
+    """A mode Steve does not have, or one asked without what it explains: unknown_mode, needs_highlight, needs_page,
     needs_equation, needs_code, needs_figure."""
 
     def __init__(self, reason: str):
@@ -87,8 +96,10 @@ def _check(ctx: Context, mode: str) -> None:
     region = ctx.region.kind if ctx.region else None
     if mode not in TASKS:
         raise PromptError("unknown_mode")
-    if mode == "explain_highlight" and ctx.highlight is None:
+    if mode in ("explain_highlight", "summarize_selection") and ctx.highlight is None:
         raise PromptError("needs_highlight")
+    if mode == "summarize_page" and ctx.highlight is None:
+        raise PromptError("needs_page")
     if mode in ("explain_equation", "latex_equation") and region != "math" and not (region is None and _has_image(ctx)):
         raise PromptError("needs_equation")
     if mode == "explain_code" and region != "code":

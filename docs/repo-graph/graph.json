@@ -1496,6 +1496,18 @@
       "language": "text"
     },
     {
+      "id": "file:backend/tests/fixtures/steve_prompts/summarize_page.txt",
+      "type": "file",
+      "role": "test",
+      "language": "text"
+    },
+    {
+      "id": "file:backend/tests/fixtures/steve_prompts/summarize_selection.txt",
+      "type": "file",
+      "role": "test",
+      "language": "text"
+    },
+    {
       "id": "file:backend/tests/memory_db.py",
       "type": "file",
       "role": "test",

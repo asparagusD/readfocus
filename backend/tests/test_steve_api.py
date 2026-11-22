@@ -352,3 +352,41 @@ def test_steve_waits_while_the_book_is_processed(env):
     assert "in a moment" in response.json()["detail"]["message"] and env.gemini.calls == []
     env.db.tables["books"][0]["status"] = "ready"
     assert ask(env).status_code == 200
+
+
+# C40.6 (issue 24): Steve in Copilot's place: Summarize a selection, or the page the reader is on.
+PAGE_ANCHOR = {"kind": "pdf", "page": 4, "quads": [[0, 0, 612, 792]], "text": ""}
+
+
+def test_summarize_this_page_sends_the_pages_words_as_the_selection(env):
+    page = "The ferryman counts the coins twice before the lantern is lit."
+    done = events(ask(env, mode="summarize_page", anchor=PAGE_ANCHOR, page_text=page, question="Summarize this page."))
+    assert done[-1][0] == "done"
+    body = env.gemini.calls[0]["parts"][0]
+    assert f"<selection>{page}</selection>" in body and "summarize the page in <selection>" in env.gemini.calls[0]["system"]
+
+
+def test_summarize_a_selection_needs_one(env):
+    anchor = {"kind": "pdf", "page": 4, "quads": [[1, 1, 2, 2]], "text": "counts the coins twice"}
+    events(ask(env, mode="summarize_selection", anchor=anchor, question="Summarize this passage."))
+    assert "summarize the passage in <selection>" in env.gemini.calls[0]["system"]
+    refused = ask(env, mode="summarize_selection", question="Summarize this passage.")
+    assert refused.status_code == 422 and refused.json()["detail"]["code"] == "needs_highlight"
+
+
+@pytest.mark.parametrize("body, code", [
+    ({"mode": "summarize_page", "anchor": PAGE_ANCHOR}, "needs_page"),  # no words
+    ({"mode": "summarize_page", "page_text": "Some words."}, "needs_page"),  # no place
+    ({"mode": "summarize_page", "anchor": PAGE_ANCHOR, "page_text": "   "}, "needs_page"),
+    ({"mode": "ask", "page_text": "Some words."}, "unexpected_page_text"),
+])
+def test_a_page_summary_needs_its_words_and_place_and_nothing_else_takes_them(env, body, code):
+    response = ask(env, question="Summarize this page.", **body)
+    assert response.status_code == 422 and response.json()["detail"]["code"] == code
+    assert env.gemini.calls == []
+
+
+def test_a_page_longer_than_the_limit_is_refused_before_anything_is_built(env):
+    response = ask(env, mode="summarize_page", anchor=PAGE_ANCHOR, page_text="x" * (steve_ask.policy.PAGE_TEXT_MAX_CHARS + 1),
+                   question="Summarize this page.")
+    assert response.status_code == 422 and env.gemini.calls == []

@@ -276,3 +276,15 @@
   border-radius: var(--radius-panel);
   box-shadow: none;
 }
+
+/* C39.8: a highlight's comment under its words in the Annotations tab, quieter, two lines at most. */
+.rf-anno-body { flex: 1; display: flex; flex-direction: column; gap: 2px; min-inline-size: 0; }
+.rf-anno-comment {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  color: var(--ink-2);
+  font-size: var(--text-label);
+  font-style: italic;
+}

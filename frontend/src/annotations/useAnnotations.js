@@ -56,9 +56,9 @@ export function useAnnotations(bookId) {
     setAnnotations((list) => list.filter((a) => a.id !== id));
     try {
       await fetchApi(`/annotations/${id}`, { method: 'DELETE' });
-      const { anchors, style, color, position_start, position_end } = before;
+      const { anchors, style, color, position_start, position_end, comment } = before; // C39.8: its comment too
       toast({ kind: 'neutral', message: `${style === 'underline' ? 'Underline' : 'Highlight'} deleted.`,
-        action: { label: 'Undo', onClick: () => create({ anchors, style, color, position_start, position_end }) } });
+        action: { label: 'Undo', onClick: () => create({ anchors, style, color, position_start, position_end, ...(comment && { comment }) }) } });
     } catch {
       setAnnotations((list) => [...list, before].sort((a, b) => a.position_start - b.position_start));
       toast({ kind: 'warning', message: `That ${before.style} wasn't deleted. Try again.` });
@@ -78,8 +78,8 @@ export function useAnnotations(bookId) {
     return gone;
   }, [annotations, toast]);
 
-  const restore = useCallback((rows) => Promise.all(rows.map(({ anchors, style, color, position_start, position_end }) =>
-    create({ anchors, style, color, position_start, position_end }))), [create]);
+  const restore = useCallback((rows) => Promise.all(rows.map(({ anchors, style, color, position_start, position_end, comment }) =>
+    create({ anchors, style, color, position_start, position_end, ...(comment && { comment }) }))), [create]);
 
   return { annotations, create, update, remove, erase, restore };
 }

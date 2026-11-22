@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  COLOURS, colourName, coloursUsed, FIRST_COLOURS, lastColour, MARK_COLOURS, MORE_COLOURS, newAnnotation, storeLastColour,
+  cleanComment, COLOURS, colourName, coloursUsed, FIRST_COLOURS, lastColour, MARK_COLOURS, MORE_COLOURS, newAnnotation, storeLastColour,
 } from './palette.js';
 
 const memory = () => {
@@ -42,4 +42,13 @@ test('a selection becomes the body the API takes', () => {
   assert.deepEqual(newAnnotation(place, 'sage', 'underline'), {
     anchors: place.anchors, style: 'underline', color: 'sage', position_start: 1_000_000, position_end: 1_000_005,
   });
+});
+
+test('a comment goes with a new highlight, trimmed; an empty one is none (C39.8)', () => {
+  const place = { anchors: [], start: 1, end: 2 };
+  assert.equal(newAnnotation(place, 'sky', 'highlight', 'Ask about this').comment, 'Ask about this');
+  assert.equal('comment' in newAnnotation(place, 'sky', 'highlight'), false);
+  assert.equal(cleanComment('  Why?  '), 'Why?');
+  assert.equal(cleanComment('   '), null);
+  assert.equal(cleanComment('x'.repeat(1200)).length, 1000);
 });

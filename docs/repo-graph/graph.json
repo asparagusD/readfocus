@@ -3020,6 +3020,12 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/annotations/CommentEditor.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/annotations/SelectionMenu.jsx",
       "type": "file",
       "role": "asset",
@@ -11845,6 +11851,16 @@
     {
       "type": "imports",
       "from": "file:frontend/src/annotations/ColourDots.jsx",
+      "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/CommentEditor.jsx",
+      "to": "file:frontend/src/annotations/SelectionToolbar.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/CommentEditor.jsx",
       "to": "file:frontend/src/annotations/palette.js"
     },
     {

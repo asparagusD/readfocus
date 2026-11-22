@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 1009,
-    "inventoried": 866,
+    "tracked": 1010,
+    "inventoried": 867,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 224,
-      "size_bytes": 19522,
+      "size_bytes": 19540,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -2345,8 +2345,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6443,
-      "size_bytes": 1236152,
+      "lines": 6444,
+      "size_bytes": 1237232,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -3183,6 +3183,14 @@
       "purpose": "The colour dots of the selection toolbar and the highlight chip (C39.2, issue 23 D3): the handoff's five, then More colours, which opens Edge's red and the deeper five in a second row of one grid; open by itself when the colour in use is one of them; aria-pressed in the chip."
     },
     {
+      "path": "frontend/src/annotations/CommentEditor.jsx",
+      "language": "jsx",
+      "lines": 51,
+      "size_bytes": 3095,
+      "role": "asset",
+      "purpose": "Edge's Add comment panel (C39.8, issue 23 D1): under a highlight or the selection it will highlight, the comment in plain text (focused at once), ✓ or Ctrl+Enter saves (empty is none), Cancel or Escape leaves it, Delete comment for an existing one."
+    },
+    {
       "path": "frontend/src/annotations/SelectionMenu.jsx",
       "language": "jsx",
       "lines": 113,
@@ -3193,8 +3201,8 @@
     {
       "path": "frontend/src/annotations/SelectionToolbar.css",
       "language": "css",
-      "lines": 164,
-      "size_bytes": 6964,
+      "lines": 214,
+      "size_bytes": 9008,
       "role": "asset",
       "purpose": "Styles for the selection toolbar: surface, hairline and lift; 28 px dots in --dot-* with a --line-field ring, the last colour ringed; 36 px buttons (44 px on touch); rises 8 px, fade only under reduced motion; the Ask Steve word hidden under 480 px. C39.7: the right-click menu (.rf-selmenu)."
     },
@@ -3297,18 +3305,18 @@
     {
       "path": "frontend/src/annotations/palette.js",
       "language": "javascript",
-      "lines": 40,
-      "size_bytes": 2260,
+      "lines": 45,
+      "size_bytes": 2595,
       "role": "asset",
-      "purpose": "The highlight palette (C21.2; C39.2 Edge's set): ten colour names, the first five always shown and the other five behind More colours, the page-mark colours, their spoken names, the colours a book uses, the last colour picked on this device (honey by default, storage errors ignored) and the POST body for a selection. C39.3: COLOUR_EVENT on the window when the last colour is stored."
+      "purpose": "The highlight palette (C21.2; C39.2 Edge's set): ten colour names, the first five always shown and the other five behind More colours, the page-mark colours, their spoken names, the colours a book uses, the last colour picked on this device (honey by default, storage errors ignored) and the POST body for a selection. C39.3: COLOUR_EVENT on the window when the last colour is stored. C39.8: a new highlight's comment, cleanComment (trimmed, 1,000 at most, empty is none)."
     },
     {
       "path": "frontend/src/annotations/palette.test.js",
       "language": "javascript",
-      "lines": 45,
-      "size_bytes": 2231,
+      "lines": 54,
+      "size_bytes": 2726,
       "role": "asset",
-      "purpose": "Unit tests for palette.js: the ten colours and the mark colours in order, the colours in use, the remembered last colour (a deeper one too) with fallbacks, the API body."
+      "purpose": "Unit tests for palette.js: the ten colours and the mark colours in order, the colours in use, the remembered last colour (a deeper one too) with fallbacks, the API body. C39.8: a comment with a new highlight, cleanComment."
     },
     {
       "path": "frontend/src/annotations/roving.js",
@@ -3346,9 +3354,9 @@
       "path": "frontend/src/annotations/useAnnotations.js",
       "language": "javascript",
       "lines": 85,
-      "size_bytes": 4172,
+      "size_bytes": 4274,
       "role": "asset",
-      "purpose": "Hook for a book's highlights and underlines (C21.2): loads them once; create() shows the new one at once, saves it through the C21.1 API and takes it back with a warning toast if the server refuses. C39.5: erase(ids) with no toast of its own and restore(rows), for the eraser's one Undo."
+      "purpose": "Hook for a book's highlights and underlines (C21.2): loads them once; create() shows the new one at once, saves it through the C21.1 API and takes it back with a warning toast if the server refuses. C39.5: erase(ids) with no toast of its own and restore(rows), for the eraser's one Undo. C39.8: Undo and the eraser's restore keep a highlight's comment."
     },
     {
       "path": "frontend/src/annotations/useMarkupTool.js",
@@ -5401,18 +5409,18 @@
     {
       "path": "frontend/src/reader/ContentsDrawer.css",
       "language": "css",
-      "lines": 278,
-      "size_bytes": 7739,
+      "lines": 290,
+      "size_bytes": 8138,
       "role": "asset",
       "purpose": "Contents drawer styles: a surface panel with a lift shadow, the bottom-sheet variant, Playfair heading, 44 px chapter rows in Lora, the current one on the accent wash, the 'today' label. C38.6a: the docked pane, a 300 px column of the reading body with a hairline and rounded edge. C38.6b: the Pages tab's two-column thumbnails (white sheets, the page in view outlined in the accent), the tabs on one line."
     },
     {
       "path": "frontend/src/reader/ContentsDrawer.jsx",
       "language": "jsx",
-      "lines": 187,
-      "size_bytes": 9914,
+      "lines": 190,
+      "size_bytes": 10159,
       "role": "asset",
-      "purpose": "The book's contents (C12.5b, D4): a drawer from the left starting below the toolbar (a bottom sheet under 640 px), entries {key, title, today} (since C17.5 the PDF outline or EPUB nav) with a 'today' label and the current one marked; picking one calls onPick; Esc, the close button or a click outside closes it and focus returns to the Contents button; slides by transform. C23.1: the body-start entry labelled 'focus starts'; a footer saying where focus mode starts (printed page) with 'The book starts here'. C26.5b: no \"today\" label. C38.6a (issue 22): `docked` (from 1024 px) makes it Edge's left pane beside the pages: not a dialog, open through picks and reading, no close on a press outside, Escape only from inside it; it fades rather than slides. C38.6b: `pages` (a PDF's) adds the Pages tab (PagesPanel) between Contents and Annotations; a tab the book lacks falls back to Contents."
+      "purpose": "The book's contents (C12.5b, D4): a drawer from the left starting below the toolbar (a bottom sheet under 640 px), entries {key, title, today} (since C17.5 the PDF outline or EPUB nav) with a 'today' label and the current one marked; picking one calls onPick; Esc, the close button or a click outside closes it and focus returns to the Contents button; slides by transform. C23.1: the body-start entry labelled 'focus starts'; a footer saying where focus mode starts (printed page) with 'The book starts here'. C26.5b: no \"today\" label. C38.6a (issue 22): `docked` (from 1024 px) makes it Edge's left pane beside the pages: not a dialog, open through picks and reading, no close on a press outside, Escape only from inside it; it fades rather than slides. C38.6b: `pages` (a PDF's) adds the Pages tab (PagesPanel) between Contents and Annotations; a tab the book lacks falls back to Contents. C39.8: a highlight's comment under its words in the Annotations tab."
     },
     {
       "path": "frontend/src/reader/MarkupTools.jsx",
@@ -6873,8 +6881,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 868,
-      "size_bytes": 313594,
+      "lines": 869,
+      "size_bytes": 314171,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

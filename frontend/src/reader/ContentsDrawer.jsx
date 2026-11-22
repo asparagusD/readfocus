@@ -168,9 +168,12 @@ function AnnotationsPanel({ annotations, colour, onColour, pageOf, onPick }) {
             return (
               <li key={a.id}>
                 <button type="button" className="rf-contents-item rf-anno-item" onClick={() => onPick(a)}
-                  aria-label={`${colourName(a.color)} ${a.style}${page ? `, ${page}` : ''}: ${text}`}>
+                  aria-label={`${colourName(a.color)} ${a.style}${page ? `, ${page}` : ''}: ${text}${a.comment ? `. Comment: ${a.comment}` : ''}`}>
                   <span className="rf-anno-mark" data-style={a.style} data-colour={a.color} aria-hidden="true" />
-                  <span className="rf-anno-text">{text}</span>
+                  <span className="rf-anno-body">
+                    <span className="rf-anno-text">{text}</span>
+                    {a.comment && <span className="rf-anno-comment">{a.comment}</span> /* C39.8: its comment under it */}
+                  </span>
                   {page && <span className="rf-contents-today">{page}</span>}
                 </button>
               </li>

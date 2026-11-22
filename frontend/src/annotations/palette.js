@@ -32,9 +32,14 @@ export function storeLastColour(colour, store = globalThis.localStorage) {
 }
 
 /** The POST /books/{id}/annotations body for a selection `place` ({anchors, start, end}). */
-export const newAnnotation = (place, colour, style) => ({
+export const newAnnotation = (place, colour, style, comment = null) => ({
   anchors: place.anchors, style, color: colour, position_start: place.start, position_end: place.end,
+  ...(comment && { comment }), // C39.8 (issue 23, D1): Edge's Add comment on a highlight
 });
+
+/** C39.8: a comment as the server keeps it: trimmed, at most 1,000 characters; empty is none (null). */
+export const COMMENT_MAX = 1_000;
+export const cleanComment = (text) => (text ?? '').trim().slice(0, COMMENT_MAX) || null;
 
 /** The colours a book's annotations use, in palette order (the Annotations tab filters by these). */
 export const coloursUsed = (annotations) => COLOURS.filter((c) => annotations.some((a) => a.color === c));

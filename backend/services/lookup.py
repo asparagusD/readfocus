@@ -21,6 +21,7 @@ from urllib.parse import quote
 
 import httpx
 
+from backend.services.plain_math import plain
 from backend.services.supabase_client import supabase
 
 USER_AGENT = "ReadFocus/2.0 (https://github.com/asparagusD/readfocus)"
@@ -179,6 +180,34 @@ def _from_wikipedia(term: str, page: dict) -> dict:
     return out
 
 
+def readable(payload: dict) -> dict:
+    """C41.3 (issue 30): an answer with its LaTeX as text (plain_math), as served; the cache keeps the source's text.
+
+    A definition, example or extract sentence that cannot be made readable is left out; a dictionary answer left
+    with no definition is not found.
+    """
+    if not payload.get("found") or payload.get("unavailable"):
+        return payload
+    out = dict(payload)
+    if out.get("meanings"):
+        meanings = []
+        for meaning in out["meanings"]:
+            definitions = [text for d in meaning.get("definitions") or [] if (text := plain(d))]
+            if definitions:
+                meanings.append(dict(meaning, definitions=definitions, example=plain(meaning.get("example") or "") or None))
+        out["meanings"] = meanings
+        if not meanings and not out.get("wiki"):
+            return _blank(out["term"])
+    if out.get("wiki"):
+        wiki = dict(out["wiki"])
+        extract = wiki.get("extract") or ""
+        wiki["extract"] = plain(extract) or " ".join(
+            s for s in map(plain, re.split(r"(?<=[.!?])\s+", extract)) if s)
+        wiki["description"] = plain(wiki.get("description") or "") or None
+        out["wiki"] = wiki
+    return out
+
+
 def _dictionary(term: Term) -> dict | None:
     for word in [term.key, *base_forms(term.key)]:
         entries = _get(DICTIONARY_URL + quote(word, safe=""))
@@ -247,7 +276,7 @@ def look_up(term: Term, lang: str = "en", proper: bool = False) -> dict:
     key = f"P:{term.display}" if wiki_first else term.key
     cached = _cached(key, lang)
     if cached is not None:
-        return cached
+        return readable(cached)  # C41.3: cached before C41.3 too
     if term.words > 1:
         sources = [_wikipedia]
     else:
@@ -262,7 +291,7 @@ def look_up(term: Term, lang: str = "en", proper: bool = False) -> dict:
         if payload:
             if not failed:  # the skipped source might have answered better: don't keep this one
                 _store(key, lang, payload)
-            return payload
+            return readable(payload)
     if failed:
         return dict(_blank(term.key), unavailable=True, message=UNAVAILABLE)
     payload = _blank(term.key)

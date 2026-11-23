@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 225,
-      "size_bytes": 20196,
+      "size_bytes": 20215,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -833,10 +833,10 @@
     {
       "path": "backend/services/lookup.py",
       "language": "python",
-      "lines": 270,
-      "size_bytes": 10909,
+      "lines": 299,
+      "size_bytes": 12247,
       "role": "service",
-      "purpose": "Word and phrase lookup (C12.6), backend only: normalise, then the shared term_lookups cache (an in-process LRU in front; 90 days found, 7 days not found), then the Free Dictionary API with simple base-form retries and Wikipedia's page summary (first for proper nouns and phrases; disambiguation pages reported as ambiguous); compact payload of up to 3 meanings x 2 definitions and a 2-sentence extract and Wikipedia's short description; 2.5 s timeout, one attempt per source; a failed source is skipped and the other still asked, an answer after a failure is not cached, a busy source (429, 502-504) is skipped for its Retry-After, and both failing returns 'couldn't look this up'; app User-Agent; per-user sliding-window rate limit."
+      "purpose": "Word and phrase lookup (C12.6), backend only: normalise, then the shared term_lookups cache (an in-process LRU in front; 90 days found, 7 days not found), then the Free Dictionary API with simple base-form retries and Wikipedia's page summary (first for proper nouns and phrases; disambiguation pages reported as ambiguous); compact payload of up to 3 meanings x 2 definitions and a 2-sentence extract and Wikipedia's short description; 2.5 s timeout, one attempt per source; a failed source is skipped and the other still asked, an answer after a failure is not cached, a busy source (429, 502-504) is skipped for its Retry-After, and both failing returns 'couldn't look this up'; app User-Agent; per-user sliding-window rate limit. C41.3b (issue 30): readable(payload) runs plain_math over every answer served, cached ones included (the cache keeps the source's text): an unreadable definition or extract sentence left out, a dictionary answer left with none not found."
     },
     {
       "path": "backend/services/make_way.py",
@@ -1753,10 +1753,10 @@
     {
       "path": "backend/tests/test_lookup.py",
       "language": "python",
-      "lines": 318,
-      "size_bytes": 13608,
+      "lines": 375,
+      "size_bytes": 16793,
       "role": "test",
-      "purpose": "Pytest with httpx.MockTransport and the in-memory database through TestClient: normalisation and base forms, dictionary hit payload and User-Agent, base-form retry, dictionary miss to Wikipedia, proper noun and phrase to Wikipedia, disambiguation, timeout answered gracefully and not cached, cache hit with no request, 90-day and 7-day expiry, a broken cache table, the per-user 429, 422 for non-terms, 401 without a user."
+      "purpose": "Pytest with httpx.MockTransport and the in-memory database through TestClient: normalisation and base forms, dictionary hit payload and User-Agent, base-form retry, dictionary miss to Wikipedia, proper noun and phrase to Wikipedia, disambiguation, timeout answered gracefully and not cached, cache hit with no request, 90-day and 7-day expiry, a broken cache table, the per-user 429, 422 for non-terms, 401 without a user. C41.3b: math in a definition, a cached answer and a Wikipedia extract served as text; an unreadable definition left out; an answer left with none not found."
     },
     {
       "path": "backend/tests/test_make_way.py",
@@ -2313,8 +2313,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 6190,
-      "size_bytes": 295404,
+      "lines": 6226,
+      "size_bytes": 297685,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2377,8 +2377,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6521,
-      "size_bytes": 1276888,
+      "lines": 6522,
+      "size_bytes": 1277579,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -7090,7 +7090,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 895,
-      "size_bytes": 328454,
+      "size_bytes": 328849,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

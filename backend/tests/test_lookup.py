@@ -316,3 +316,60 @@ def test_a_proper_lookup_never_answers_a_plain_lookup_of_the_same_word(env):
     plain = get(env, "run").json()
     assert plain["source"] == "dictionary" and plain["meanings"][0]["part_of_speech"] == "verb"
     assert sorted(row["term"] for row in env.db.tables["term_lookups"]) == ["P:run", "run"]
+
+
+# C41.3 (issue 30): Wiktionary's LaTeX, passed through by the Free Dictionary API, served as readable text.
+GRAPH = [{"word": "graph", "meanings": [{"partOfSpeech": "noun", "definitions": [
+    {"definition": "A diagram displaying data."},
+    {"definition": "A set of points constituting a graphical representation of a real function; (formally) a set of "
+                   r"tuples (x_1, x_2, \ldots, x_m, y)\in\R^{m+1}, where y=f(x_1, x_2, \ldots, x_m) for a given "
+                   r"function f: \R^m\rightarrow\R.",
+     "example": "The graph of $y = x^2$ is a parabola."}]}]}]
+
+
+def test_math_in_a_definition_is_served_as_text(env):
+    env.upstream.routes[DICT + "graph"] = GRAPH
+    meaning = get(env, "graph").json()["meanings"][0]
+    assert meaning["definitions"][1].endswith("tuples (x₁, x₂, …, xₘ, y) ∈ ℝᵐ⁺¹, where y=f(x₁, x₂, …, xₘ) for a "
+                                              "given function f: ℝᵐ → ℝ.")
+    assert meaning["example"] == "The graph of y = x² is a parabola."
+    assert "\\" not in str(get(env, "graph").json())
+
+
+def test_an_answer_cached_with_markup_is_cleaned_when_served(env):
+    """The cache keeps the source's text: answers cached before C41.3 come back clean with no request."""
+    env.db.tables["term_lookups"] = [{
+        "term": "graph", "lang": "en", "kind": "definition", "source": "dictionary", "found": True,
+        "fetched_at": env.clock.now.isoformat(),
+        "payload": lookup._from_dictionary("graph", GRAPH),
+    }]
+    body = get(env, "graph").json()
+    assert "ℝᵐ⁺¹" in body["meanings"][0]["definitions"][1]
+    assert env.upstream.requests == []
+    assert r"\R" in env.db.tables["term_lookups"][0]["payload"]["meanings"][0]["definitions"][1]
+
+
+def test_a_definition_that_cannot_be_made_readable_is_left_out(env):
+    env.upstream.routes[DICT + "matrix"] = [{"word": "matrix", "meanings": [
+        {"partOfSpeech": "noun", "definitions": [{"definition": r"\begin{pmatrix} a & b \end{pmatrix}"},
+                                                 {"definition": "A rectangular array of numbers."}]},
+        {"partOfSpeech": "verb", "definitions": [{"definition": r"\unknown{x}"}]}]}]
+    body = get(env, "matrix").json()
+    assert body["found"] is True
+    assert body["meanings"] == [{"part_of_speech": "noun", "definitions": ["A rectangular array of numbers."],
+                                 "example": None}]
+
+
+def test_an_answer_left_with_no_readable_definition_is_not_found(env):
+    env.upstream.routes[DICT + "tensor"] = [{"word": "tensor", "meanings": [
+        {"partOfSpeech": "noun", "definitions": [{"definition": r"\begin{bmatrix} 1 \end{bmatrix}"}]}]}]
+    body = get(env, "tensor").json()
+    assert body["found"] is False and body["meanings"] == []
+
+
+def test_math_in_a_wikipedia_extract_is_served_as_text(env):
+    env.upstream.routes[WIKI + "Real_line"] = dict(
+        THOREAU, title="Real line",
+        extract=r"The real line is the set {\displaystyle \mathbb {R} } of real numbers. It is ordered.")
+    body = get(env, "real line").json()
+    assert body["wiki"]["extract"] == "The real line is the set ℝ of real numbers. It is ordered."

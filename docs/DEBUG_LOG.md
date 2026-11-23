@@ -6277,3 +6277,64 @@ of 6). The bar's tools at 1280 and 1440 px are as before (the markup tools stay 
 
 ### Commit
 fix(ui): place the reading toolbar's tools before it can wrap
+
+## 2026-11-23 C41.G — two e2e tests failed once each on GitHub's runner after the toolbar fix
+
+**Status:** open (not reproduced)
+
+### Symptom
+CI on main 7ef401e (run 45176758942, attempt 1) failed `e2e/read-aloud.spec.js:181` "an EPUB › reads the section in
+view and marks each word in it; Ctrl+Shift+U stops it": after Pause the marked word was "1", not a word of the first
+sentence (`expect('The lamp on the desk threw a small circle of light, and inside Chapter').toContain(...)`, line
+188). CI on readfocus-2.0 365b774 (run 45170659523) failed `e2e/ocr.spec.js:17` "a scanned page › is read by OCR
+once, gets a text layer, and its words can be looked up". Each run: 1 failed, 450 passed.
+
+### Repro
+    npx playwright test read-aloud.spec.js ocr.spec.js -g "reads the section in view|is read by OCR once" --repeat-each=5
+
+Not reproduced: 10 of 10 pass at 365b774 and 10 of 10 at f568ad3 (before C41). The re-run of the failed job on main
+(attempt 2) passed, with deploy-render.
+
+### Hypotheses
+1. Timing on GitHub's slower runner: the read-aloud test pauses a fake voice that moves on by timers (the same test's
+   pause flaked once in C40.4d). Not tested further: no local reproduction.
+2. Fallout from C41.G's layout effect (a measure after every toolbar render)? Not supported: both tests pass 10 of 10
+   locally with it, and C41.G changes only the toolbar's tool placement.
+
+### Commit
+None: logged only; reopen if either fails again.
+
+## 2026-11-23 C41.G — the lookup mark is opaque again in browsers without color-mix
+
+**Status:** fixed
+
+### Symptom
+Found after the C41 release, reading the live CSS: the build turned `--lookup-mark: color-mix(in srgb, var(--accent)
+28%, transparent)` into `--lookup-mark:var(--accent)` with the color-mix value inside `@supports (color:color-mix(in
+lab, red, red))`. A browser without color-mix (about Chrome < 111, Safari < 16.2) gets the solid accent, which covers
+the hovered word as issue 29 did.
+
+### Repro
+`frontend/e2e/reader.spec.js` "every lookup-mark colour in the served CSS is see-through": reads every `--lookup-mark`
+declaration in the served stylesheets and checks each colour's alpha. Before the fix: failed on
+`--lookup-mark:var(--accent)` (alpha 1).
+
+### Hypotheses
+1. The CSS build writes a fallback for a custom property whose value uses color-mix with var(): it cannot compute the
+   mix, so it falls back to the var() alone. Evidence: the live and local `dist` CSS hold exactly that. Confirmed.
+
+### Root cause
+`frontend/src/styles/tokens.css`: `--lookup-mark` was a color-mix() of `var(--accent)`, which the build cannot lower.
+
+### Fix
+`tokens.css`: `--lookup-mark` written out per theme and accent, the accent at 28 % (`rgb(166 75 42 / 0.28)` and the
+three others; built as 8-digit hex, read back to Chrome 62 and Safari 10). `originalview/frame.css`: a note's passage
+pulse uses `--lookup-mark` (the same colour; its color-mix had no fallback, so old browsers drew no wash). Other
+color-mix uses were checked: none has an opaque fallback (a declaration with color-mix and no fallback is dropped).
+
+### Regression test
+The repro test: failed before the fix (alpha 1), passes after; "the looked-up word stays visible under its mark"
+(PDF and EPUB, Paper and Lamplight) passes.
+
+### Commit
+fix(ui): keep the lookup mark see-through without color-mix

@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 225,
-      "size_bytes": 20232,
+      "size_bytes": 20267,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -2313,8 +2313,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 6279,
-      "size_bytes": 300887,
+      "lines": 6340,
+      "size_bytes": 304215,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2377,8 +2377,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6523,
-      "size_bytes": 1278344,
+      "lines": 6524,
+      "size_bytes": 1278965,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2929,8 +2929,8 @@
     {
       "path": "frontend/e2e/reader.spec.js",
       "language": "javascript",
-      "lines": 577,
-      "size_bytes": 31401,
+      "lines": 598,
+      "size_bytes": 32639,
       "role": "config",
       "purpose": "Playwright e2e for the reader (C12.10; on the original view since C17.5), each on sample.pdf and the illustrated reflow.epub: page turns by keys, button and edge (a turn asked for mid-turn queued); the place saved as a PDF or EPUB anchor and restored after a reload; the same place in view across resizes; no animated leaf under reduced motion; End to today's closing page and a mouse click on its Start test; turning past today's end and back; page-turn frame rate written to test-results; once: the session row at 375, the clock's Start and Resume, one h1, the PDF outline in the contents with today labelled. Lookup (C17.5), on both: a cached word's card within 600 ms beside the word, closed by Esc and by moving off it; a 2-5 word phrase; the compact sheet from a long-press at 375; once: a proper noun's Wikipedia summary (PDF), words in an EPUB figure not looked up, hover off with Enter on a selection still opening a focused card. C17.6: an EPUB's saved anchor reopens the same place after a larger text size and a reload; a PDF zoomed to 200% and back keeps its page and anchor. C17 close: the ribbon and B save the place at once with a toast, on both books. C24.G: the read-on test reads each place with settled(), after the turn has landed. C26.5a: opens through /open (no session), the place saved without a chunk, the closing page at the end of the book, contents with no \"today\"; the read-on-past-today test removed. C38.7b: an EPUB's page box (of ~5, a typed page goes to its start, one the book lacks puts it back). C38.10: the page-turn frame-rate bench removed (scroll-frame-rate.spec.js replaces it)."
     },
@@ -5034,7 +5034,7 @@
       "path": "frontend/src/originalview/frame.css",
       "language": "css",
       "lines": 378,
-      "size_bytes": 11960,
+      "size_bytes": 11990,
       "role": "asset",
       "purpose": "The original view's frame (C17.4, handoff 11-12): running header above the page, the stage and book box (EPUB paper; a PDF spread is its own paper with a gutter shade), the turning leaf and its shade, edge zones, the ribbon outside the paper's right edge (following a PDF's measured spread), the footer with Previous, folio and Next, error and loading pages, 1023 and 640 px layouts, reduced motion. C17.5: the note card over the foot of today's first page, the closing page over the book with its lamp's single pulse, and the blank page over the renderer while a session opens. C17.5: the lookup mark (::highlight rf-lookup) and no iOS callout on a held word. C38.2: a PDF on the desk (paper-2) with each page's hairline and lift, the closing words below the last page, its ribbon over the desk; the spread, gutter and pan cursors gone. C38.3: in Lamplight an EPUB's page is the publisher's white, and the spine shade Paper's. C38.4c: a PDF's status note at the desk's lower left. C38.5b: the find bar over the book's top right, left of the ribbon; across the top on a phone, the ribbon moved below it. C38.5c: an EPUB's ribbon drops below the find bar while it is open. C38.7a: an EPUB on the desk as one scrolled column of paper (48rem, hairlines, the publisher's white in Lamplight), its closing card; the running header, spine shade, edge zones, footer, turn buttons and closing page's rules gone; the ribbon over the desk for both kinds. C38.8b: the desk's ribbon rules gone (moved to RibbonPlacer.css), the saved place's small mark; the find bar back at the right."
     },
@@ -6121,8 +6121,8 @@
     {
       "path": "frontend/src/styles/tokens.css",
       "language": "css",
-      "lines": 352,
-      "size_bytes": 13095,
+      "lines": 357,
+      "size_bytes": 13480,
       "role": "asset",
       "purpose": "Design tokens from the Claude Design handoff: Paper and Lamplight colours for terracotta and sage (and a swatch of each accent for the accent setting) (data-theme, data-accent on <html>), covers, type roles, spacing, radii, borders, shadows, z-index, durations and easings; Tailwind v4 @theme mapping. C38.5a: --find-match and --find-current, see-through honey and amber over a white page in either theme."
     },

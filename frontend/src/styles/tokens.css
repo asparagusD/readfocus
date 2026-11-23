@@ -237,8 +237,10 @@
      from find's amber. */
   --read-word: rgb(76 124 166 / 0.35);
   /* C41.2 (issue 29): the word being looked up, a see-through wash of the accent over a published page, so its ink
-     shows through (an opaque --accent-soft covered a PDF's words, drawn on the canvas under the text layer). */
-  --lookup-mark: color-mix(in srgb, var(--accent) 28%, transparent);
+     shows through (an opaque --accent-soft covered a PDF's words, drawn on the canvas under the text layer). C41.G: the
+     accent at 28 % written out per theme and accent, not color-mix(): the CSS build gave that an opaque var(--accent)
+     fallback, so a browser without color-mix covered the word again. */
+  --lookup-mark: rgb(166 75 42 / 0.28);
 
   --accent: #a64b2a;
   --accent-hover: #904428; /* A8: 18% toward --ink */
@@ -256,6 +258,7 @@
 
 /* ── Colour: Paper, sage ────────────────────────────────────────────── */
 [data-accent="sage"] {
+  --lookup-mark: rgb(80 106 74 / 0.28); /* C41.G: --accent at 28 % */
   --accent: #506a4a;
   --accent-hover: #495d42;
   --accent-ink: #fffdf9;
@@ -304,6 +307,7 @@
   --ul-ocean: #72a5d8;
   --ul-berry: #d77ca5;
 
+  --lookup-mark: rgb(229 154 108 / 0.28); /* C41.G: --accent at 28 % */
   --accent: #e59a6c;
   --accent-hover: #e7a87f;
   --accent-ink: #1d1915;
@@ -320,6 +324,7 @@
 
 /* ── Colour: Lamplight, sage ────────────────────────────────────────── */
 [data-theme="lamplight"][data-accent="sage"] {
+  --lookup-mark: rgb(168 193 152 / 0.28); /* C41.G: --accent at 28 % */
   --accent: #a8c198;
   --accent-hover: #b5c7a3;
   --accent-ink: #1d1915;

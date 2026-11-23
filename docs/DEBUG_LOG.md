@@ -6338,3 +6338,43 @@ The repro test: failed before the fix (alpha 1), passes after; "the looked-up wo
 
 ### Commit
 fix(ui): keep the lookup mark see-through without color-mix
+
+## 2026-11-23 C41.G — one e2e test fails per CI run since the toolbar fix (ocr.spec.js twice)
+
+**Status:** fixed (ocr.spec.js); open (steve-blocks.spec.js:122, read-aloud.spec.js:181: not reproduced)
+
+### Symptom
+Every CI run since C41.G (365b774) failed one test, a different one each time except `e2e/ocr.spec.js:17`, which failed
+twice (readfocus-2.0 365b774 run 45170659523 and 3eb5f94 run 45192843203):
+
+    Error: expect(received).toContain(expected) // indexOf
+    Expected value: "lamp"
+    Received array: []
+      > 39 |     expect(api.lookups.map((l) => l.term)).toContain('lamp');
+
+Also once each: `read-aloud.spec.js:181` (main 7ef401e) and `steve-blocks.spec.js:122` (main b11b77c: the code
+block's toolbar had no buttons after 5 s). The CI runs before C41.G (06af297 and earlier) never failed ocr.spec.js.
+
+### Repro
+None fails locally (10 of 10, 45 of 45 at 4x CPU). Measured instead, `ocr.spec.js` at 4x CPU with a log of when the
+lookup request reached the mock after the word card showed: with C41.G's measure after every render, 1 of 6 runs had
+no request yet when the card showed (it came 104 ms later); with the toolbar of 06af297, 0 of 6.
+
+### Hypotheses
+1. The test races: the card shows while its request is still on the way, and line 39 reads the mock's list at once.
+   Evidence: the 104 ms gap above. Confirmed.
+2. C41.G widened that gap: its layout effect measured the bar after every render of the reading page, forcing a
+   layout each time. Evidence: 1 of 6 vs 0 of 6 above (small sample). Taken as likely.
+
+### Fix
+`frontend/src/reader/ReaderToolbar.jsx`: the after-render measure runs only when the bar's text changed (textContent,
+which forces no layout): a new chapter name or count still moves the tools before the bar is laid out, and other
+renders measure nothing. `frontend/e2e/ocr.spec.js`: the lookup request is polled for, as the card can show first.
+
+### Regression test
+"a jump into a chapter with a longer name never wraps the toolbar" and the notes-sync pulse test still pass (3 of 3);
+ocr.spec.js 3 of 3; steve-blocks.spec.js and notes-blocks.spec.js 45 of 45 at 4x CPU. The proof on GitHub's runner is
+the next CI runs.
+
+### Commit
+fix(ui): measure the reading toolbar only when its text changes

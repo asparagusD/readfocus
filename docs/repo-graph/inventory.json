@@ -2313,8 +2313,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 6340,
-      "size_bytes": 304215,
+      "lines": 6380,
+      "size_bytes": 306463,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2377,8 +2377,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6524,
-      "size_bytes": 1278965,
+      "lines": 6525,
+      "size_bytes": 1279657,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2825,8 +2825,8 @@
     {
       "path": "frontend/e2e/ocr.spec.js",
       "language": "javascript",
-      "lines": 66,
-      "size_bytes": 3940,
+      "lines": 67,
+      "size_bytes": 4065,
       "role": "config",
       "purpose": "E2E for C19.4b with real tesseract.js in Edge: a scanned page shows 'Making this page selectable...', is read once, gets a text layer of OCR words and word lookup on them; a fully scanned book opens pages-only ('Reading this scan: n of 2 pages'), reads both pages, then shows 'Preparing your first session...'; logs seconds per page. C26.5a: the scanned book opens through /open and then says \"Preparing quizzes (C36.4: “Preparing the book”)…\"."
     },
@@ -5569,8 +5569,8 @@
     {
       "path": "frontend/src/reader/ReaderToolbar.jsx",
       "language": "jsx",
-      "lines": 292,
-      "size_bytes": 17131,
+      "lines": 299,
+      "size_bytes": 17369,
       "role": "asset",
       "purpose": "The reader's toolbar (handoff screen 06): back to the library, book and chapter in Lora italic, smaller and larger text, Contents (aria-expanded), the theme toggle, and the caller's session controls; a floating pill that fades and lifts while reading (data-visible), reports focus inside so it stays shown; icons only on narrow screens; a 'Look up' switch (role=switch) when the page passes onLookupToggle (C12.8). C17.4: without onSize the text-size pair is left out and `controls` take its place. C23.6a: a Focus mode switch (onFocusMode). C38.4b (issue 22): Edge's bar in three groups (the book and Contents; the book's own controls; Notes, Look up, Steve, Focus, the session's tools), More tools (a panel: the theme, pin, full screen, and below 1280 px Look up, Steve, Focus and the session's tools; Escape or a press outside closes it), pinned by default (unpinned it fades while reading), full screen. C38.6a: useMedia from useMedia.js; `contentsDocked`: Contents is no dialog's opener then (no aria-haspopup). C38.7b: useFits: Look up, Steve, Focus and the session's tools sit in the bar only while they fit on one row with 40 px to spare (measured with a ResizeObserver over the bar and its groups, their width kept from when last in the bar), else in More tools; was a 1280 px breakpoint, which wrapped the bar at 1280 and with an EPUB's controls. A tool used from More tools (not a switch or a pressed toggle) closes the panel, focus back on More. C38.8b: onBookmark: Save my place (B), before Notes, always in the bar. C39.3: `markup` (MarkupTools) first in the end group while it fits; useFits measures several boxes (the markup tools leave the bar after Look up and the rest), else at the top of More tools, which a markup tool's menu keeps open. C40.2: onReadAloud and readingAloud: Edge's Read aloud, pressed while it reads, right after the markup tools and moving with them. C40.4c: `file`: Save and Save as (a copy with my marks), at the bar's end while they fit, the first to move into More tools. C40.4d: file.hint names what Save saves. C40.5: file.onPrint, Edge's Print, first in the group."
     },

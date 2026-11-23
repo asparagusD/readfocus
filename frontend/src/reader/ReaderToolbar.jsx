@@ -54,10 +54,17 @@ function useFits(bar, boxes) {
     for (const group of el.children) watch.observe(group);
     return () => { watch.disconnect(); remeasure.current = null; };
   }, [bar, boxes]);
-  // C41.G: and after every render, before the browser lays the bar out: a new chapter name (or page box, or count) is
-  // placed in the same task, so no ResizeObserver ever sees a bar wrapped onto two rows. A resize observer alone
-  // answered a frame late: the wrap shrank the book's frame and every page was laid out twice (DEBUG_LOG C41.G).
-  useLayoutEffect(() => { remeasure.current?.(); });
+  // C41.G: and after a render that changed the bar's text (a new chapter name, a count), before the browser lays the bar
+  // out, so no ResizeObserver ever sees it wrapped onto two rows. A resize observer alone answered a frame late: the
+  // wrap shrank the book's frame and every page was laid out twice (DEBUG_LOG C41.G). textContent forces no layout, so
+  // the renders that change nothing in the bar (most of them) measure nothing.
+  const text = useRef(null);
+  useLayoutEffect(() => {
+    const now = bar.current?.textContent ?? '';
+    if (now === text.current) return;
+    text.current = now;
+    remeasure.current?.();
+  });
   return fits;
 }
 

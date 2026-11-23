@@ -36,7 +36,8 @@ test.describe('a scanned page', () => {
     await page.mouse.move(5, 5);
     await page.mouse.move(lamp.x, lamp.y);
     await expect(page.locator('.rf-wordcard')).toBeVisible();
-    expect(api.lookups.map((l) => l.term)).toContain('lamp');
+    // DEBUG_LOG C41.G: the card shows while its request is still on the way, so the request is waited for.
+    await expect.poll(() => api.lookups.map((l) => l.term)).toContain('lamp');
     // Every shown page is read once, and its note goes away.
     await expect(page.locator('.rf-pdf-ocr')).toHaveCount(0, { timeout: 90_000 });
     expect(new Set(api.ocrPosts.map((p) => p.page)).size).toBe(api.ocrPosts.length);

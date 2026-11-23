@@ -25,6 +25,7 @@ const SPARE = 40; // px kept free, so a notes count or a longer chapter name mov
 function useFits(bar, boxes) {
   const [fits, setFits] = useState(() => boxes.map(() => true));
   const widths = useRef(boxes.map(() => 0));
+  const remeasure = useRef(null);
   // C39.3b: measured once before the first paint too, so a bar mounted afresh (after focus mode) never shows, even for
   // a frame, tools it has no room for (DEBUG_LOG C39.3b); then on every resize.
   useLayoutEffect(() => {
@@ -47,11 +48,16 @@ function useFits(bar, boxes) {
       setFits((now) => (now.every((v, i) => v === next[i]) ? now : next));
     };
     measure();
+    remeasure.current = measure;
     const watch = new ResizeObserver(measure);
     watch.observe(el);
     for (const group of el.children) watch.observe(group);
-    return () => watch.disconnect();
+    return () => { watch.disconnect(); remeasure.current = null; };
   }, [bar, boxes]);
+  // C41.G: and after every render, before the browser lays the bar out: a new chapter name (or page box, or count) is
+  // placed in the same task, so no ResizeObserver ever sees a bar wrapped onto two rows. A resize observer alone
+  // answered a frame late: the wrap shrank the book's frame and every page was laid out twice (DEBUG_LOG C41.G).
+  useLayoutEffect(() => { remeasure.current?.(); });
   return fits;
 }
 

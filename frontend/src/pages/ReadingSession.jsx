@@ -262,6 +262,7 @@ export function ReadingSession() {
   // C38.9 (issue 22): Edge's keys for the book's view: Ctrl+Alt+G the page box, Ctrl+\ fit page or width, Ctrl+= and
   // Ctrl+- zoom a PDF (an EPUB's text size); the browser's own zoom (Ctrl+0, the wheel) is left alone.
   const pageInput = useRef(null);
+  const shownPercent = place?.percent ?? null; // C41.1: a fit's zoom in percent, from the PDF
   useEffect(() => {
     const onKey = (event) => {
       if (event.defaultPrevented || event.target?.closest?.('[role="dialog"], textarea, [contenteditable="true"]')) return;
@@ -275,13 +276,13 @@ export function ReadingSession() {
       } else if (shortcut === 'zoom-in' || shortcut === 'zoom-out') {
         event.preventDefault();
         const dir = shortcut === 'zoom-in' ? 1 : -1;
-        if (kind === 'pdf') setZoom(zoomStep(zoom, dir));
+        if (kind === 'pdf') setZoom(zoomStep(zoom, dir, shownPercent)); // C41.1: from the percentage shown
         else setSettings({ ...settings, fontSize: fontStep(settings.fontSize ?? 18, dir) });
       }
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [kind, zoom, settings, setZoom, setSettings]);
+  }, [kind, zoom, shownPercent, settings, setZoom, setSettings]);
 
   // C38.6a (issue 22): from 1024 px the contents are Edge's left pane, beside the pages; below, the drawer.
   const docked = useMedia('(min-width: 1024px)');

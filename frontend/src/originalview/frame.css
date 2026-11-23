@@ -337,8 +337,9 @@
 
 /* In-place lookup (C12.7; both renderers since C17.5): a soft wash on the word or phrase being
    looked up, painted by the Custom Highlight API without changing the text's DOM. An EPUB
-   section gets the same rule in its own document (highlight.js). No motion. */
-::highlight(rf-lookup) { background-color: var(--accent-soft); }
+   section gets the same rule in its own document (highlight.js). No motion. C41.2 (issue 29): see-through
+   (--lookup-mark), so the word shows under it: a PDF's words are on the canvas beneath the text layer. */
+::highlight(rf-lookup) { background-color: var(--lookup-mark); }
 .rf-ov-book { -webkit-touch-callout: none; } /* C12.9: a held word opens its card, not the iOS callout */
 
 /* C22.5: a note's passage pulses after its reference is clicked: its lines in the accent, or the whole page's edge

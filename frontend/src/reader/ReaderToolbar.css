@@ -186,8 +186,11 @@
   font-variant-numeric: tabular-nums;
 }
 
-.rf-zoom-level {
-  min-width: 10ch;
+/* C41.1 (issue 28): Edge's zoom box, the zoom in percent between − and +, typed over like the page box. */
+.rf-zoom-input {
+  width: 7ch;
+  margin-inline: var(--space-1);
+  font-size: var(--text-label);
   font-variant-numeric: tabular-nums;
 }
 

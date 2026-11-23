@@ -44,7 +44,9 @@ test('a box is placed, typed and saved in page points, and back after a reload a
   await openReader(page);
   await expect(savedBoxes(page)).toHaveText('See figure 3');
   const before = await savedBoxes(page).boundingBox();
-  await page.getByRole('button', { name: 'Zoom in' }).click();
+  const level = page.getByRole('textbox', { name: /^Zoom, / }); // C41.1: Zoom in is one of Edge's small steps now
+  await level.fill('200');
+  await level.press('Enter');
   await expect.poll(async () => (await savedBoxes(page).boundingBox()).width).toBeGreaterThan(before.width * 1.1);
   const after = Number(await pageOne(page).getAttribute('data-scale'));
   const font = await savedBoxes(page).evaluate((el) => parseFloat(getComputedStyle(el).fontSize));

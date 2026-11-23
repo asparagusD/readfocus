@@ -4,7 +4,9 @@
 import { test, expect, book, openReader, shown } from './fixtures.js';
 
 const count = (page) => page.getByRole('search', { name: 'Find in the book' }).locator('.rf-find-count');
-const zoom = (page) => page.getByRole('button', { name: /^Zoom: / });
+const zoom = (page) => page.getByRole('textbox', { name: /^Zoom, / }); // C41.1: Edge's zoom box, in percent
+const fitted = (page) => page.locator('.rf-pdf-book');
+const LEVELS = [25, 33, 50, 67, 75, 80, 90, 100, 110, 125, 150, 175, 200, 250, 300, 400, 500]; // frame.ZOOMS in percent
 
 test.describe('pdf', () => {
   test.use({ book: 'pdf' });
@@ -34,16 +36,20 @@ test.describe('pdf', () => {
     await expect.poll(async () => (await shown(page)).start).toBe('4');
 
     await book(page).focus();
-    await expect(zoom(page)).toHaveText('Fit page');
+    await expect(fitted(page)).toHaveAttribute('data-zoom', 'fit-page');
+    await expect(zoom(page)).toHaveValue(/^\d+%$/); // C41.1: a fit shows its percentage, as Edge's
     await page.keyboard.press('Control+\\');
-    await expect(zoom(page)).toHaveText('Fit width');
+    await expect(fitted(page)).toHaveAttribute('data-zoom', 'fit-width');
     await page.keyboard.press('Control+\\');
-    await expect(zoom(page)).toHaveText('Fit page');
+    await expect(fitted(page)).toHaveAttribute('data-zoom', 'fit-page');
+    await page.waitForTimeout(300); // the fitted page laid out again
+    const fitPage = Number.parseInt(await zoom(page).inputValue(), 10);
+    const up = LEVELS.find((level) => level > fitPage);
     await page.keyboard.press('Control+=');
-    await page.keyboard.press('Control+=');
-    await expect(zoom(page)).toHaveText('125%');
+    await expect(zoom(page)).toHaveValue(`${up}%`); // Edge's next level from the fit
     await page.keyboard.press('Control+-');
-    await expect(zoom(page)).toHaveText('Fit width');
+    await page.keyboard.press('Control+-');
+    await expect(zoom(page)).toHaveValue(`${LEVELS[LEVELS.indexOf(up) - 2]}%`); // and on below the fitted page
     expect(await page.evaluate(() => window.visualViewport.scale)).toBe(1); // the page itself was not zoomed
   });
 });

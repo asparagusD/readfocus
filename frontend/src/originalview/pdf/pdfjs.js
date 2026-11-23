@@ -4,6 +4,7 @@
 // under /pdfjs/ (vite.config.js, pdfjsAssets), so every image and glyph renders
 // without a third-party request.
 
+import { canvasRatio } from '../frame';
 import { rangeSource } from './rangeSource';
 
 const ASSETS = '/pdfjs/';
@@ -52,9 +53,10 @@ export async function openPdf(source) {
  * Render page `pageNumber` of `doc` at `scale` CSS px per PDF point into a new canvas, as published (C38.3, issue 22
  * D2: no Lamplight recolouring any more).
  */
-export async function renderPage(doc, pageNumber, scale, pixelRatio = globalThis.devicePixelRatio || 1) {
+export async function renderPage(doc, pageNumber, scale, screenRatio = globalThis.devicePixelRatio || 1) {
   const page = await doc.getPage(pageNumber);
   const viewport = page.getViewport({ scale });
+  const pixelRatio = canvasRatio(viewport.width, viewport.height, screenRatio); // C41.1: a 500 % page stays in memory
   const canvas = document.createElement('canvas');
   canvas.width = Math.floor(viewport.width * pixelRatio);
   canvas.height = Math.floor(viewport.height * pixelRatio);

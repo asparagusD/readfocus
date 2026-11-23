@@ -6154,3 +6154,73 @@ symptom), passes with them. Test 1: 20 of 20 passed at 1x, 3x, 4x and 6x CPU (5 
 
 ### Commit
 fix(notes): keep the notebook open when Escape closes an Excalidraw dialog
+
+## 2026-11-23 C41.2 — the lookup mark hides the word it marks (issue 29)
+
+### Symptom
+With Look up on, hovering a word in a PDF drew a solid box over it (black-looking in Lamplight); the word was gone
+and only its card could be read. Reported by you on 2026-11-23, opened as issue 29.
+
+### Repro
+`frontend/e2e/reader.spec.js` "the looked-up word stays visible under its mark in <theme>" (PDF and EPUB, Paper and
+Lamplight): a screenshot of the hovered word, its darkest pixel and the spread to its lightest. Before the fix 3 of 4
+failed: PDF Paper darkest pixel 228 of 255 (no ink at all), PDF Lamplight spread 13, EPUB Lamplight spread 42.
+
+### Hypotheses
+1. The mark's colour is opaque. Evidence: `::highlight(rf-lookup)` used `--accent-soft`, a solid colour in every theme
+   (#f3e2d7, #e3eadd, #3a271c, #26301f); find and read aloud use see-through tokens over the same pages. Confirmed.
+2. In a PDF the mark sits above the words: they are on the canvas under PDF.js's transparent text layer, which is
+   where the highlight paints. Confirmed by the PDF Paper case (a light opaque box, no ink left).
+3. The EPUB copy (`reader/highlight.js`) brought the same opaque colour into each section. Confirmed by the EPUB
+   Lamplight case (dark ink on #3a271c).
+
+### Root cause
+`frontend/src/originalview/frame.css` and `frontend/src/reader/highlight.js` painted the lookup mark in the opaque
+`--accent-soft`.
+
+### Fix
+`frontend/src/styles/tokens.css`: `--lookup-mark`, the accent at 28 % over transparent; `frame.css`: the mark uses it;
+`reader/highlight.js`: an EPUB section gets its computed value (var() resolved) instead of `--accent-soft`.
+
+### Regression test
+The four repro tests: 3 failed before the fix, 4 passed after (`npx playwright test reader.spec.js -g "stays visible
+under its mark"`); screenshots of all four looked at.
+
+### Commit
+fix(ui): let the looked-up word show through its mark
+
+## 2026-11-23 C41.3 — word lookup shows raw LaTeX from the dictionary (issue 30)
+
+### Symptom
+Hovering "graph" showed "... (x_1, x_2, \ldots, x_m, y)\in\R^{m+1}, where ... f: \R^m\rightarrow\R." in the word
+card. Reported by you on 2026-11-23, opened as issue 30.
+
+### Repro
+`backend/tests/test_lookup.py`: the "graph" entry as the Free Dictionary API returns it (checked live on 2026-11-23),
+a cached answer holding it, an unreadable definition, and a Wikipedia extract with `{\displaystyle ...}`: the five new
+tests failed before the fix.
+
+### Hypotheses
+1. The Free Dictionary API passes Wiktionary's `<math>` through as LaTeX source and `lookup._from_dictionary` copies
+   definitions unchanged. Evidence: the live answer for "graph" holds the backslash commands. Confirmed.
+2. The card renders markup (no escaping)? Ruled out: it renders text; the backslashes are in the API's text.
+3. Answers already cached (90 days) keep the markup even after a fix at fetch time. Confirmed by reading `_cached`:
+   payloads are served as stored, so the cleanup has to run when an answer is served.
+
+### Root cause
+`backend/services/lookup.py` served the source's definitions, examples and extracts as they came, LaTeX included.
+
+### Fix
+`backend/services/plain_math.py` (new, standard library only): `plain(text)` turns common LaTeX into Unicode (ℝ, ∈,
+…, →, Greek, x₁, ᵐ⁺¹, a/b, √), writes a script with no Unicode form as `x_b` or `2^(q+1)`, leaves text with no markup
+(and prices like $5) alone, and gives None for markup it cannot read. `lookup.readable(payload)` applies it to every
+answer served, cached ones included; a definition or extract sentence that stays unreadable is left out, and a
+dictionary answer left with no definition is not found. The cache keeps the source's text.
+
+### Regression test
+`backend/tests/test_plain_math.py` (30) and the five `test_lookup.py` tests: failed before, pass after. Live: 18 math
+words' full dictionary entries hold 5 definitions with markup; all 5 now read as text, none dropped, and no served
+answer keeps a backslash. The card with the cleaned "graph" definition was looked at in Paper and Lamplight.
+
+### Commit
+fix(backend): show math in looked-up definitions as readable text (C41.3b; plain_math itself in C41.3a)

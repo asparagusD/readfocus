@@ -2,6 +2,7 @@
 // API mocked, once on a PDF (e2e/fixtures/books/sample.pdf) and once on an illustrated EPUB (reflow.epub).
 import { book, clickTool, contentsPane, expect, openReader, settled, shown, spoken, test, timeToCard, wake, wordPoint } from './fixtures.js';
 
+const shots = process.env.E2E_SHOTS;
 /** "5" -> 5; "2:340" -> [2, 340]. */
 const at = (spot) => (spot.includes(':') ? spot.split(':').map(Number) : Number(spot));
 const before = (a, b) => (Array.isArray(a) ? a[0] < b[0] || (a[0] === b[0] && a[1] < b[1]) : a < b);
@@ -156,6 +157,36 @@ for (const kind of ['pdf', 'epub']) {
       await page.mouse.move(middle.x + middle.width / 2, lamp.y, { steps: 4 });
       await expect(card).toHaveCount(0);
     });
+
+    // C41.2 (issue 29): the lookup mark was an opaque --accent-soft box, which in a PDF covered the canvas's words and
+    // in an EPUB put dark ink on a dark wash in Lamplight. The hovered word's ink must still show through it.
+    for (const theme of ['paper', 'lamplight']) {
+      test(`the looked-up word stays visible under its mark in ${theme}`, async ({ page }) => {
+        await openReader(page);
+        await page.evaluate((t) => { document.documentElement.dataset.theme = t; }, theme);
+        const lamp = await wordPoint(page, 'lamp');
+        await page.mouse.move(5, 5);
+        await page.mouse.move(lamp.x, lamp.y);
+        await expect(page.locator('.rf-wordcard')).toBeVisible();
+        const clip = { x: lamp.left, y: lamp.top, width: lamp.right - lamp.left, height: lamp.bottom - lamp.top };
+        if (shots) await page.screenshot({ path: `${shots}/lookup-mark-${kind}-${theme}.png`, clip: { x: clip.x - 60, y: clip.y - 30, width: 260, height: 140 } });
+        const shot = (await page.screenshot({ clip })).toString('base64');
+        const { ink, wash } = await page.evaluate(async (png) => { // the word's darkest and lightest pixels
+          const img = new Image();
+          img.src = `data:image/png;base64,${png}`;
+          await img.decode();
+          const canvas = Object.assign(document.createElement('canvas'), { width: img.width, height: img.height });
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          const px = ctx.getImageData(0, 0, img.width, img.height).data;
+          const lum = [];
+          for (let i = 0; i < px.length; i += 4) lum.push(0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2]);
+          return { ink: Math.min(...lum), wash: Math.max(...lum) };
+        }, shot);
+        expect(ink, 'the word is drawn').toBeLessThan(90);
+        expect(wash - ink, 'and stands out from the mark').toBeGreaterThan(90);
+      });
+    }
 
     test('two to five selected words are looked up as a phrase', async ({ page, api }) => {
       await openReader(page);
@@ -425,15 +456,38 @@ test.describe('anchors across re-layout', () => {
     await page.waitForTimeout(800);
     const place = await shown(page);
     await expect.poll(() => api.position?.anchor?.page, { timeout: 4000 }).toBe(Number(place.start));
-    const zoomIn = page.getByRole('button', { name: 'Zoom in' });
-    for (let i = 0; i < 5 && await zoomIn.isEnabled(); i += 1) await zoomIn.click();
-    await expect(page.getByRole('button', { name: /^Zoom: 200%/ })).toBeVisible();
+    const level = page.getByRole('textbox', { name: /^Zoom, / }); // C41.1: Edge's zoom box, typed over
+    await level.fill('200');
+    await level.press('Enter');
+    await expect(level).toHaveValue('200%');
+    await page.waitForTimeout(500);
     expect(await shown(page)).toEqual(place);
-    await wake(page); // "Zoom in" is now disabled, so focus left the toolbar and it may have faded
-    await page.getByRole('button', { name: /^Zoom:/ }).click(); // back to a fit
+    await page.getByRole('button', { name: 'Fit to page' }).click(); // back to a fit
     await page.waitForTimeout(500);
     expect(await shown(page)).toEqual(place);
     expect(api.position.anchor).toEqual({ kind: 'pdf', page: Number(place.start), quads: [[0, 0, 0, 0]], text: '' });
+  });
+
+  test("C41.1 (issue 28): the zoom box takes a percentage, kept to 25-500 %, and puts the zoom back otherwise", async ({ page }) => {
+    await openReader(page);
+    const level = page.getByRole('textbox', { name: /^Zoom, / });
+    await expect(level).toHaveValue(/^\d+%$/); // the fitted page in percent
+    const fitted = await level.inputValue();
+    await level.fill('abc');
+    await level.press('Enter');
+    await expect(level).toHaveValue(fitted); // not a number: nothing changes
+    await level.fill('900');
+    await level.press('Enter');
+    await expect(level).toHaveValue('500%');
+    await expect(page.getByRole('button', { name: 'Zoom in' })).toBeDisabled();
+    const canvas = page.locator('.rf-pdf-page[data-page="1"] canvas').first();
+    await expect.poll(() => canvas.evaluate((c) => c.width * c.height)).toBeGreaterThan(0); // drawn at 500 %,
+    expect(await canvas.evaluate((c) => c.width * c.height)).toBeLessThanOrEqual(2 ** 24); // in at most 2^24 pixels
+    await level.fill('42');
+    await level.press('Escape');
+    await expect(level).toHaveValue('500%'); // Escape puts it back
+    await page.getByRole('button', { name: 'Zoom out' }).click();
+    await expect(level).toHaveValue('400%');
   });
 });
 

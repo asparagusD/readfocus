@@ -42,7 +42,9 @@ test('a stroke is drawn, saved in page points, and back after a reload and a zoo
   await expect(saved(page)).toHaveCount(1);
   expect(api.markLoads[0]).toBe('1-20');
   const before = await saved(page).boundingBox();
-  await page.getByRole('button', { name: 'Zoom in' }).click();
+  const level = page.getByRole('textbox', { name: /^Zoom, / }); // C41.1: Zoom in is one of Edge's small steps now
+  await level.fill('200');
+  await level.press('Enter');
   await expect.poll(async () => (await saved(page).boundingBox()).width).toBeGreaterThan(before.width * 1.1);
   const after = Number(await page.locator('.rf-pdf-page[data-page="1"]').getAttribute('data-scale'));
   const width = (await saved(page).boundingBox()).width;

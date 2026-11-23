@@ -425,15 +425,38 @@ test.describe('anchors across re-layout', () => {
     await page.waitForTimeout(800);
     const place = await shown(page);
     await expect.poll(() => api.position?.anchor?.page, { timeout: 4000 }).toBe(Number(place.start));
-    const zoomIn = page.getByRole('button', { name: 'Zoom in' });
-    for (let i = 0; i < 5 && await zoomIn.isEnabled(); i += 1) await zoomIn.click();
-    await expect(page.getByRole('button', { name: /^Zoom: 200%/ })).toBeVisible();
+    const level = page.getByRole('textbox', { name: /^Zoom, / }); // C41.1: Edge's zoom box, typed over
+    await level.fill('200');
+    await level.press('Enter');
+    await expect(level).toHaveValue('200%');
+    await page.waitForTimeout(500);
     expect(await shown(page)).toEqual(place);
-    await wake(page); // "Zoom in" is now disabled, so focus left the toolbar and it may have faded
-    await page.getByRole('button', { name: /^Zoom:/ }).click(); // back to a fit
+    await page.getByRole('button', { name: 'Fit to page' }).click(); // back to a fit
     await page.waitForTimeout(500);
     expect(await shown(page)).toEqual(place);
     expect(api.position.anchor).toEqual({ kind: 'pdf', page: Number(place.start), quads: [[0, 0, 0, 0]], text: '' });
+  });
+
+  test("C41.1 (issue 28): the zoom box takes a percentage, kept to 25-500 %, and puts the zoom back otherwise", async ({ page }) => {
+    await openReader(page);
+    const level = page.getByRole('textbox', { name: /^Zoom, / });
+    await expect(level).toHaveValue(/^\d+%$/); // the fitted page in percent
+    const fitted = await level.inputValue();
+    await level.fill('abc');
+    await level.press('Enter');
+    await expect(level).toHaveValue(fitted); // not a number: nothing changes
+    await level.fill('900');
+    await level.press('Enter');
+    await expect(level).toHaveValue('500%');
+    await expect(page.getByRole('button', { name: 'Zoom in' })).toBeDisabled();
+    const canvas = page.locator('.rf-pdf-page[data-page="1"] canvas').first();
+    await expect.poll(() => canvas.evaluate((c) => c.width * c.height)).toBeGreaterThan(0); // drawn at 500 %,
+    expect(await canvas.evaluate((c) => c.width * c.height)).toBeLessThanOrEqual(2 ** 24); // in at most 2^24 pixels
+    await level.fill('42');
+    await level.press('Escape');
+    await expect(level).toHaveValue('500%'); // Escape puts it back
+    await page.getByRole('button', { name: 'Zoom out' }).click();
+    await expect(level).toHaveValue('400%');
   });
 });
 

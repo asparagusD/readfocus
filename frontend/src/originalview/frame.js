@@ -5,21 +5,52 @@
 
 export const SPREAD_MIN_WIDTH = 1024; // two pages side by side from here up (C12, handoff)
 
-export const ZOOMS = ['fit-page', 'fit-width', 1.25, 1.5, 1.75, 2];
+// C41.1 (issue 28): a zoom is 'fit-page', 'fit-width' or a fraction of the printed size; − and + step through Edge's
+// levels from wherever the view is, a fitted one included, and a typed percentage is kept to 25-500 %.
+export const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.75, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4, 5];
+export const MIN_ZOOM = ZOOMS[0];
+export const MAX_ZOOM = ZOOMS.at(-1);
 const CSS_PX_PER_POINT = 96 / 72; // 100 % is the page at its printed size
+const clampZoom = (zoom) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom));
 
-/** CSS pixels per PDF point for a zoom, a page size in points, the frame, and pages across. */
+/** CSS pixels per PDF point for a zoom, a page size in points, the frame, and pages across; anything else fits the page. */
 export function pdfScale(zoom, page, frame, columns = 1) {
   const across = Math.max(1, frame.width) / columns / page.width;
   const down = Math.max(1, frame.height) / page.height;
-  const scale = zoom === 'fit-page' ? Math.min(across, down) : zoom === 'fit-width' ? across : zoom * CSS_PX_PER_POINT;
-  return Math.max(0.1, scale);
+  if (typeof zoom === 'number' && Number.isFinite(zoom)) return clampZoom(zoom) * CSS_PX_PER_POINT;
+  return Math.max(0.1, zoom === 'fit-width' ? across : Math.min(across, down));
 }
 
-/** The next zoom in or out of ZOOMS, stopping at the ends. */
-export function zoomStep(zoom, dir) {
-  const at = Math.max(0, ZOOMS.indexOf(zoom));
-  return ZOOMS[Math.min(ZOOMS.length - 1, Math.max(0, at + dir))];
+/** The whole percentage a scale (CSS pixels per point) shows the page at. */
+export const zoomPercent = (scale) => Math.round((scale / CSS_PX_PER_POINT) * 100);
+
+/**
+ * The next of Edge's levels in or out from the zoom, or from `percent` (the one shown) when the zoom is a fit; the
+ * zoom unchanged at the ends, or for a fit whose percentage is not known yet.
+ */
+export function zoomStep(zoom, dir, percent = null) {
+  const numeric = typeof zoom === 'number' && Number.isFinite(zoom);
+  const at = numeric ? clampZoom(zoom) : Number.isFinite(percent) ? percent / 100 : null;
+  if (at === null) return zoom;
+  const next = dir > 0 ? ZOOMS.find((z) => z > at + 0.005) : ZOOMS.findLast((z) => z < at - 0.005);
+  return next ?? zoom;
+}
+
+/** A typed zoom ("150", "150%", " 87.5 % ") as a fraction kept to 25-500 %; null for anything else. */
+export function parseZoom(text) {
+  const match = /^\s*(\d{1,4}(?:\.\d+)?)\s*%?\s*$/.exec(String(text ?? ''));
+  return match && Number(match[1]) > 0 ? Math.round(clampZoom(Number(match[1]) / 100) * 100) / 100 : null;
+}
+
+/**
+ * C41.1: the pixel ratio a page `width` x `height` CSS px is drawn at: the screen's, lowered so the canvas holds at
+ * most `max` pixels (PDF.js's own viewer caps it at 2^24 too), so a page at 500 % stays in memory and the browser's
+ * canvas limit; the page keeps its size on screen, a little softer.
+ */
+export const MAX_CANVAS_PIXELS = 2 ** 24;
+export function canvasRatio(width, height, ratio, max = MAX_CANVAS_PIXELS) {
+  const area = Math.max(1, width) * Math.max(1, height);
+  return Math.min(ratio, Math.sqrt(max / area));
 }
 
 /** C38.9: an EPUB's text sizes, and the next one in or out (Ctrl+= and Ctrl+-, the toolbar's A and A), stopping at the ends. */
@@ -53,7 +84,12 @@ export function readerShortcut({ key = '', code = '', ctrlKey = false, metaKey =
   return null;
 }
 
-export const zoomLabel = (zoom) => (zoom === 'fit-page' ? 'Fit page' : zoom === 'fit-width' ? 'Fit width' : `${Math.round(zoom * 100)}%`);
+/** The zoom as Edge shows it, a percentage (a fit's from `percent`); "Fit page" or "Fit width" until that is known. */
+export function zoomLabel(zoom, percent = null) {
+  if (typeof zoom === 'number' && Number.isFinite(zoom)) return `${Math.round(clampZoom(zoom) * 100)}%`;
+  if (Number.isFinite(percent)) return `${percent}%`;
+  return zoom === 'fit-width' ? 'Fit width' : 'Fit page';
+}
 
 /** "p. 5 of 300" or "pp. 44–45 of 380", using the PDF's own page labels when it has them. */
 export function pdfFolio(pages, numPages, labels) {

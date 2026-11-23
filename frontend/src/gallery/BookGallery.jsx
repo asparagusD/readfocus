@@ -19,15 +19,16 @@ export default function BookGallery() {
   const [zoom, setZoom] = useState('fit-page');
   const [settings, setSettings] = useState({ style: 'publisher', fontSize: 18, lineHeight: null, margins: 'normal' });
   const [entry, setEntry] = useState(null);
+  const [place, setPlace] = useState(null); // C41.1: the zoom box shows a fit's percentage from the place
   const reader = useRef(null);
-  const onRelocate = useCallback((place) => { probe.place = place; setEntry(place.entry); }, []);
+  const onRelocate = useCallback((next) => { probe.place = next; setPlace(next); setEntry(next.entry); }, []);
 
   return (
     <div style={{ display: 'grid', gridTemplateRows: 'auto minmax(0, 1fr)', height: '100dvh', paddingTop: 'var(--space-3)', background: 'var(--paper)' }}>
       <ReaderToolbar bookTitle={KIND === 'pdf' ? 'A sample PDF' : 'Reflow fixture'} chapter={entry} visible onFocusChange={() => {}}
         onBack={() => globalThis.history.back()}
         controls={(
-          <ReaderControls kind={KIND} zoom={zoom} onZoom={setZoom} settings={settings} onSettings={setSettings} />
+          <ReaderControls kind={KIND} zoom={zoom} onZoom={setZoom} settings={settings} onSettings={setSettings} place={place} />
         )} />
       <Reader ref={(r) => { reader.current = r; probe.reader = r; }} kind={KIND} bookId={bookId} load={load}
         title={KIND === 'pdf' ? 'A sample PDF' : 'Reflow fixture'} zoom={zoom} settings={settings}

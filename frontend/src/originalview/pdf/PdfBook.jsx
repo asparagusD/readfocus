@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { entryForPage, pdfFolio, pdfScale } from '../frame';
+import { entryForPage, pdfFolio, pdfScale, zoomPercent } from '../frame';
 import { findPattern, locate, matchesIn, searchOrder, spotOf } from '../find';
 import { squeeze } from '../place';
 import { holdOf, layoutPages, pageBox, pagesInView, scrollForHold, scrollToPage, stepScroll } from '../scroll';
@@ -191,8 +191,9 @@ export function PdfBook({ bookId, load, zoom = 'fit-page', view: pageView = 'one
       page: view.main ?? opening, total: numPages,
       folio: pdfFolio([view.main ?? opening], numPages, meta.labels),
       entry: entryForPage(meta.outline, view.main ?? opening)?.title ?? null, atStart: view.atStart, atEnd: view.atEnd,
+      percent: scale ? zoomPercent(scale) : null, // C41.1: the zoom shown, a fit's too
     });
-  }, [doc, view, numPages, meta]); // eslint-disable-line react-hooks/exhaustive-deps -- opening is the fallback only
+  }, [doc, view, numPages, meta, scale]); // eslint-disable-line react-hooks/exhaustive-deps -- opening is the fallback only
 
   // Each page's text, read once (C17.5: today's chunks found by it; C38.5: find), with where each item of it sits
   // (spots: [at, x, y, width] per item, in points at scale 1, y its top), so a match can be scrolled to undrawn.

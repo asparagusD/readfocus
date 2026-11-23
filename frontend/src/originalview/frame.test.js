@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  buildLocations, entryForPage, fontStep, keyAction, locationAt, locationPlace, pdfFolio, readerShortcut, pdfScale, timeAtProgress, zoomStep,
+  buildLocations, canvasRatio, entryForPage, fontStep, keyAction, locationAt, locationPlace, parseZoom, pdfFolio, readerShortcut, pdfScale,
+  timeAtProgress, zoomLabel, zoomPercent, zoomStep,
 } from './frame.js';
 
 test('zoom: fit-page and fit-width from the frame; percentages are of the printed size', () => {
@@ -11,15 +12,42 @@ test('zoom: fit-page and fit-width from the frame; percentages are of the printe
   assert.equal(pdfScale('fit-width', page, frame, 1), 1200 / 612);
   assert.equal(pdfScale(1.5, page, frame, 2), 1.5 * 96 / 72);
   assert.ok(pdfScale('fit-page', page, { width: 0, height: 0 }, 1) > 0); // never zero or negative
+  assert.equal(pdfScale(9, page, frame), 5 * (96 / 72)); // C41.1: kept to 25-500 %
+  assert.equal(pdfScale(0.01, page, frame), 0.25 * (96 / 72));
+  assert.equal(pdfScale('nonsense', page, frame), pdfScale('fit-page', page, frame)); // a bad stored zoom fits the page
 });
 
-test('zoom steps: fit-page, fit-width, then 125 to 200 %', () => {
-  assert.equal(zoomStep('fit-page', 1), 'fit-width');
-  assert.equal(zoomStep('fit-width', 1), 1.25);
-  assert.equal(zoomStep(1.75, 1), 2);
-  assert.equal(zoomStep(2, 1), 2);
-  assert.equal(zoomStep(1.25, -1), 'fit-width');
-  assert.equal(zoomStep('fit-page', -1), 'fit-page');
+test("C41.1: zoom steps are Edge's, from a percentage or from the percentage a fit shows", () => {
+  assert.equal(zoomStep(1, 1), 1.1);
+  assert.equal(zoomStep(1, -1), 0.9);
+  assert.equal(zoomStep(0.25, -1), 0.25); // the ends hold
+  assert.equal(zoomStep(5, 1), 5);
+  assert.equal(zoomStep(1.13, 1), 1.25); // a typed zoom steps to Edge's next level
+  assert.equal(zoomStep(1.13, -1), 1.1);
+  assert.equal(zoomStep('fit-page', 1, 113), 1.25); // a fit at 113 %
+  assert.equal(zoomStep('fit-width', -1, 150), 1.25); // a fit exactly on a level moves off it
+  assert.equal(zoomStep('fit-page', -1, 20), 'fit-page'); // already below 25 %
+  assert.equal(zoomStep('fit-page', 1, null), 'fit-page'); // not measured yet
+});
+
+test('C41.1: the zoom in percent, a typed one read, and a fit shown as its percentage', () => {
+  assert.equal(zoomPercent(1.5 * 96 / 72), 150);
+  assert.equal(zoomLabel(1.25), '125%');
+  assert.equal(zoomLabel('fit-page', 113), '113%');
+  assert.equal(zoomLabel('fit-width'), 'Fit width'); // until the page is measured
+  assert.equal(zoomLabel('fit-page'), 'Fit page');
+  assert.equal(parseZoom('150'), 1.5);
+  assert.equal(parseZoom(' 87.5 % '), 0.88);
+  assert.equal(parseZoom('900%'), 5);
+  assert.equal(parseZoom('10'), 0.25);
+  for (const bad of ['', 'abc', '0', '-50', '1e3', null]) assert.equal(parseZoom(bad), null, String(bad));
+});
+
+test('C41.1: a big page is drawn at a lower pixel ratio, at most 2^24 canvas pixels', () => {
+  assert.equal(canvasRatio(816, 1056, 2), 2); // a page fitted on a 2x screen: the screen's ratio
+  const ratio = canvasRatio(4080, 5280, 1.5); // Letter at 500 %
+  assert.ok(ratio < 1);
+  assert.ok(4080 * ratio * 5280 * ratio <= 2 ** 24 + 1);
 });
 
 test('PDF folio: the page label when the PDF has one, else the number', () => {

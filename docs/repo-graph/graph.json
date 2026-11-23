@@ -13765,6 +13765,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/pdfjs.js",
+      "to": "file:frontend/src/originalview/frame.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/pdfjs.js",
       "to": "file:frontend/src/originalview/pdf/rangeSource.js"
     },
     {

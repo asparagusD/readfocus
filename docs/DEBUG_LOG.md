@@ -6303,3 +6303,38 @@ Not reproduced: 10 of 10 pass at 365b774 and 10 of 10 at f568ad3 (before C41). T
 
 ### Commit
 None: logged only; reopen if either fails again.
+
+## 2026-11-23 C41.G — the lookup mark is opaque again in browsers without color-mix
+
+**Status:** fixed
+
+### Symptom
+Found after the C41 release, reading the live CSS: the build turned `--lookup-mark: color-mix(in srgb, var(--accent)
+28%, transparent)` into `--lookup-mark:var(--accent)` with the color-mix value inside `@supports (color:color-mix(in
+lab, red, red))`. A browser without color-mix (about Chrome < 111, Safari < 16.2) gets the solid accent, which covers
+the hovered word as issue 29 did.
+
+### Repro
+`frontend/e2e/reader.spec.js` "every lookup-mark colour in the served CSS is see-through": reads every `--lookup-mark`
+declaration in the served stylesheets and checks each colour's alpha. Before the fix: failed on
+`--lookup-mark:var(--accent)` (alpha 1).
+
+### Hypotheses
+1. The CSS build writes a fallback for a custom property whose value uses color-mix with var(): it cannot compute the
+   mix, so it falls back to the var() alone. Evidence: the live and local `dist` CSS hold exactly that. Confirmed.
+
+### Root cause
+`frontend/src/styles/tokens.css`: `--lookup-mark` was a color-mix() of `var(--accent)`, which the build cannot lower.
+
+### Fix
+`tokens.css`: `--lookup-mark` written out per theme and accent, the accent at 28 % (`rgb(166 75 42 / 0.28)` and the
+three others; built as 8-digit hex, read back to Chrome 62 and Safari 10). `originalview/frame.css`: a note's passage
+pulse uses `--lookup-mark` (the same colour; its color-mix had no fallback, so old browsers drew no wash). Other
+color-mix uses were checked: none has an opaque fallback (a declaration with color-mix and no fallback is dropped).
+
+### Regression test
+The repro test: failed before the fix (alpha 1), passes after; "the looked-up word stays visible under its mark"
+(PDF and EPUB, Paper and Lamplight) passes.
+
+### Commit
+fix(ui): keep the lookup mark see-through without color-mix

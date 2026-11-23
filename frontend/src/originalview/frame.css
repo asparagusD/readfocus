@@ -349,7 +349,7 @@
 .rf-passage-pulse {
   position: absolute;
   border-radius: 2px;
-  background: color-mix(in srgb, var(--accent) 28%, transparent);
+  background: var(--lookup-mark); /* C41.G: the accent at 28 %, as before, without color-mix */
   opacity: 0;
   animation: rf-passage-pulse calc(var(--dur-4) * 4) var(--ease-settle) both;
 }

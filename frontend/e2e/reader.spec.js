@@ -545,6 +545,27 @@ for (const kind of ['pdf', 'epub']) {
   });
 }
 
+// C41.G: every --lookup-mark the app ships is see-through, the build's fallbacks included. A color-mix() mark got an
+// opaque `var(--accent)` fallback from the CSS build, so a browser without color-mix covered the word again (issue 29).
+test('every lookup-mark colour in the served CSS is see-through', async ({ page }) => {
+  await openReader(page);
+  const marks = await page.evaluate(async () => {
+    const css = await Promise.all([...document.styleSheets].map((s) => (s.href ? fetch(s.href).then((r) => r.text()) : s.ownerNode.textContent)));
+    const values = css.join('\n').match(/--lookup-mark:[^;}]+/g) ?? [];
+    const probe = document.body.appendChild(document.createElement('i'));
+    const alphas = values.map((decl) => {
+      probe.style.backgroundColor = '';
+      probe.style.backgroundColor = decl.slice('--lookup-mark:'.length).trim();
+      const rgba = getComputedStyle(probe).backgroundColor.match(/[\d.]+/g).map(Number);
+      return { decl, alpha: rgba.length > 3 ? rgba[3] : 1 };
+    });
+    probe.remove();
+    return alphas;
+  });
+  for (const { decl, alpha } of marks) expect(alpha, decl).toBeLessThan(0.5);
+  expect(marks.length).toBeGreaterThanOrEqual(4); // Paper and Lamplight, terracotta and sage
+});
+
 // DEBUG_LOG C41.G: a longer chapter name grew the title past useFits's spare room, so the bar wrapped to two rows for a
 // frame before a tool moved into More tools; the book's frame shrank and every page re-laid out twice.
 test('a jump into a chapter with a longer name never wraps the toolbar, even for a frame', async ({ page, api }) => {

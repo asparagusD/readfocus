@@ -6224,3 +6224,56 @@ answer keeps a backslash. The card with the cleaned "graph" definition was looke
 
 ### Commit
 fix(backend): show math in looked-up definitions as readable text (C41.3b; plain_math itself in C41.3a)
+
+## 2026-11-23 C41.G — a note's page pulse lands beside its page on main's CI
+
+**Status:** fixed
+
+### Symptom
+CI on main 3300121 (run 45158850000, attempt 2) failed `e2e/notes-sync.spec.js:93` "a note's reference moves the book
+to its passage and pulses it; the notepad holds still":
+
+    Error: expect(received).toBeLessThan(expected)
+    Expected: < 3
+    Received:   18.5
+      > 105 |     expect(Math.abs(box.x - sheet.x)).toBeLessThan(3); // a whole-page note pulses the page
+        at /home/runner/work/readfocus/readfocus/frontend/e2e/notes-sync.spec.js:105:39
+
+Attempt 1 failed `notes-blocks.spec.js:86` instead (a block toolbar not shown in 30 s; 5 of 5 pass locally).
+
+### Repro
+    npx playwright test notes-sync.spec.js -g "moves the book to its passage" --repeat-each=6
+
+Fails 3 of 6 at readfocus-2.0 06af297 (always 36.375 px off), passes 6 of 6 at f568ad3 (before C41): C41 caused it.
+
+### Hypotheses
+1. The pulse is measured while page 5 still carries a stale `data-scale` because the book frame changed size just
+   after the jump. Evidence: a log of page 5's `data-scale` shows 0.674 (51 %) then 0.7348 (55 %) right after the
+   click, and the pulse's width is 412.6 px = 612 pt x 0.674. Confirmed.
+2. The frame changed size because the toolbar wrapped to two rows for a frame (44 -> 92 px, then back). Evidence:
+   ResizeObserver log: `.rf-toolbar` 1382x92 and `.rf-pdf-book` 1060x566 at the same moment, back to 44 / 614 13 ms
+   later with one tool fewer in the bar. Confirmed.
+3. The toolbar wrapped because the chapter title grew on the jump ("Walden", 44 px -> "Walden · Chapter 2 Noise",
+   148 px) by more than `useFits`'s 40 px SPARE, and C41's zoom group (box plus Fit button) used up the slack that hid
+   this before. Evidence: the same log's title and group widths. Confirmed.
+
+### Root cause
+`frontend/src/reader/ReaderToolbar.jsx` `useFits` counted the chapter title at its current width, so a longer chapter
+name could overflow the bar before the tools moved into More tools; the bar wrapped for a frame, the book's frame
+shrank and every page re-laid out twice (a visible jump for readers too, not only the pulse).
+
+### Fix
+`frontend/src/reader/ReaderToolbar.jsx` `useFits`: the measure also runs in a layout effect after every render, so a
+change of the bar's content (a new chapter name, the page box, a count) is placed before the browser lays the bar out
+and no ResizeObserver, the book's included, ever sees it on two rows. Attempt 1 counted the title at its max-width
+(24ch) and passed the repro, but it moved Edge's markup tools into More tools at 1440 px for every book, giving up
+C39's layout; taken back.
+
+### Regression test
+`frontend/e2e/reader.spec.js` "a jump into a chapter with a longer name never wraps the toolbar, even for a frame" (12
+notes, so Notes carries a count; the notepad open; a jump to page 5): without the fix 3 of 3 failed (the bar reached
+102 px), with it 3 of 3 pass. The repro (`notes-sync.spec.js` "moves the book to its passage") passes 3 of 3 (was 3
+of 6). The bar's tools at 1280 and 1440 px are as before (the markup tools stay in the bar at 1440).
+
+### Commit
+fix(ui): place the reading toolbar's tools before it can wrap

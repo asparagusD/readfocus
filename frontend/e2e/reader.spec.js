@@ -1,6 +1,6 @@
 // The reader end to end (C12.10; on the original view since C17.5), on the real /read page with the
 // API mocked, once on a PDF (e2e/fixtures/books/sample.pdf) and once on an illustrated EPUB (reflow.epub).
-import { book, clickTool, contentsPane, expect, openReader, settled, shown, spoken, test, timeToCard, wake, wordPoint } from './fixtures.js';
+import { book, clickTool, contentsPane, expect, openNotepad, openReader, settled, shown, spoken, test, timeToCard, wake, wordPoint } from './fixtures.js';
 
 const shots = process.env.E2E_SHOTS;
 /** "5" -> 5; "2:340" -> [2, 340]. */
@@ -544,3 +544,34 @@ for (const kind of ['pdf', 'epub']) {
     });
   });
 }
+
+// DEBUG_LOG C41.G: a longer chapter name grew the title past useFits's spare room, so the bar wrapped to two rows for a
+// frame before a tool moved into More tools; the book's frame shrank and every page re-laid out twice.
+test('a jump into a chapter with a longer name never wraps the toolbar, even for a frame', async ({ page, api }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  for (let p = 1; p <= 6; p += 1) { // twelve notes, so Notes carries a count, as in notes-sync.spec.js
+    for (const k of ['a', 'b']) {
+      api.notes.push({ id: `n${p}${k}`, kind: 'text', scope: 'view', anchors: [{ kind: 'pdf', page: p, quads: [[0, 0, 612, 792]], text: '' }],
+        position_start: p * 1e6, position_end: p * 1e6 + 79200, version: 1, orphaned: false, deleted_at: null, urls: {},
+        content: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: `About page ${p}` }] }] },
+        created_at: `2026-11-14T10:0${p}:0${k === 'a' ? 0 : 1}Z` });
+    }
+  }
+  await openReader(page);
+  await openNotepad(page); // the side panel open, as when a note's link jumps
+  const bar = page.getByRole('toolbar', { name: 'Reading controls' });
+  await expect.poll(async () => (await bar.boundingBox()).height).toBeLessThan(70);
+  await page.evaluate(() => {
+    window.__tallest = 0;
+    new ResizeObserver(([e]) => { window.__tallest = Math.max(window.__tallest, e.target.offsetHeight); })
+      .observe(document.querySelector('.rf-toolbar'));
+  });
+  const title = page.locator('.rf-toolbar-title');
+  const before = await title.textContent();
+  const box = page.getByRole('textbox', { name: /^Page number/ });
+  await box.fill('5');
+  await box.press('Enter');
+  await expect(title).not.toHaveText(before); // a chapter with a longer name
+  await page.waitForTimeout(400);
+  expect(await page.evaluate(() => window.__tallest)).toBeLessThan(70);
+});

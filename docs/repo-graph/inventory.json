@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 225,
-      "size_bytes": 20215,
+      "size_bytes": 20232,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -2313,8 +2313,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 6226,
-      "size_bytes": 297685,
+      "lines": 6279,
+      "size_bytes": 300887,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2377,8 +2377,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6522,
-      "size_bytes": 1277579,
+      "lines": 6523,
+      "size_bytes": 1278344,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2929,8 +2929,8 @@
     {
       "path": "frontend/e2e/reader.spec.js",
       "language": "javascript",
-      "lines": 546,
-      "size_bytes": 29496,
+      "lines": 577,
+      "size_bytes": 31401,
       "role": "config",
       "purpose": "Playwright e2e for the reader (C12.10; on the original view since C17.5), each on sample.pdf and the illustrated reflow.epub: page turns by keys, button and edge (a turn asked for mid-turn queued); the place saved as a PDF or EPUB anchor and restored after a reload; the same place in view across resizes; no animated leaf under reduced motion; End to today's closing page and a mouse click on its Start test; turning past today's end and back; page-turn frame rate written to test-results; once: the session row at 375, the clock's Start and Resume, one h1, the PDF outline in the contents with today labelled. Lookup (C17.5), on both: a cached word's card within 600 ms beside the word, closed by Esc and by moving off it; a 2-5 word phrase; the compact sheet from a long-press at 375; once: a proper noun's Wikipedia summary (PDF), words in an EPUB figure not looked up, hover off with Enter on a selection still opening a focused card. C17.6: an EPUB's saved anchor reopens the same place after a larger text size and a reload; a PDF zoomed to 200% and back keeps its page and anchor. C17 close: the ribbon and B save the place at once with a toast, on both books. C24.G: the read-on test reads each place with settled(), after the turn has landed. C26.5a: opens through /open (no session), the place saved without a chunk, the closing page at the end of the book, contents with no \"today\"; the read-on-past-today test removed. C38.7b: an EPUB's page box (of ~5, a typed page goes to its start, one the book lacks puts it back). C38.10: the page-turn frame-rate bench removed (scroll-frame-rate.spec.js replaces it)."
     },
@@ -5569,8 +5569,8 @@
     {
       "path": "frontend/src/reader/ReaderToolbar.jsx",
       "language": "jsx",
-      "lines": 286,
-      "size_bytes": 16633,
+      "lines": 292,
+      "size_bytes": 17131,
       "role": "asset",
       "purpose": "The reader's toolbar (handoff screen 06): back to the library, book and chapter in Lora italic, smaller and larger text, Contents (aria-expanded), the theme toggle, and the caller's session controls; a floating pill that fades and lifts while reading (data-visible), reports focus inside so it stays shown; icons only on narrow screens; a 'Look up' switch (role=switch) when the page passes onLookupToggle (C12.8). C17.4: without onSize the text-size pair is left out and `controls` take its place. C23.6a: a Focus mode switch (onFocusMode). C38.4b (issue 22): Edge's bar in three groups (the book and Contents; the book's own controls; Notes, Look up, Steve, Focus, the session's tools), More tools (a panel: the theme, pin, full screen, and below 1280 px Look up, Steve, Focus and the session's tools; Escape or a press outside closes it), pinned by default (unpinned it fades while reading), full screen. C38.6a: useMedia from useMedia.js; `contentsDocked`: Contents is no dialog's opener then (no aria-haspopup). C38.7b: useFits: Look up, Steve, Focus and the session's tools sit in the bar only while they fit on one row with 40 px to spare (measured with a ResizeObserver over the bar and its groups, their width kept from when last in the bar), else in More tools; was a 1280 px breakpoint, which wrapped the bar at 1280 and with an EPUB's controls. A tool used from More tools (not a switch or a pressed toggle) closes the panel, focus back on More. C38.8b: onBookmark: Save my place (B), before Notes, always in the bar. C39.3: `markup` (MarkupTools) first in the end group while it fits; useFits measures several boxes (the markup tools leave the bar after Look up and the rest), else at the top of More tools, which a markup tool's menu keeps open. C40.2: onReadAloud and readingAloud: Edge's Read aloud, pressed while it reads, right after the markup tools and moving with them. C40.4c: `file`: Save and Save as (a copy with my marks), at the bar's end while they fit, the first to move into More tools. C40.4d: file.hint names what Save saves. C40.5: file.onPrint, Edge's Print, first in the group."
     },

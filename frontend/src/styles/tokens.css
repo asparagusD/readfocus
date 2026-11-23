@@ -236,6 +236,9 @@
   /* C40.2: read aloud's spoken word over a published page, see-through ocean blue (Edge marks it in blue), apart
      from find's amber. */
   --read-word: rgb(76 124 166 / 0.35);
+  /* C41.2 (issue 29): the word being looked up, a see-through wash of the accent over a published page, so its ink
+     shows through (an opaque --accent-soft covered a PDF's words, drawn on the canvas under the text layer). */
+  --lookup-mark: color-mix(in srgb, var(--accent) 28%, transparent);
 
   --accent: #a64b2a;
   --accent-hover: #904428; /* A8: 18% toward --ink */

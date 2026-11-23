@@ -6154,3 +6154,37 @@ symptom), passes with them. Test 1: 20 of 20 passed at 1x, 3x, 4x and 6x CPU (5 
 
 ### Commit
 fix(notes): keep the notebook open when Escape closes an Excalidraw dialog
+
+## 2026-11-23 C41.2 — the lookup mark hides the word it marks (issue 29)
+
+### Symptom
+With Look up on, hovering a word in a PDF drew a solid box over it (black-looking in Lamplight); the word was gone
+and only its card could be read. Reported by you on 2026-11-23, opened as issue 29.
+
+### Repro
+`frontend/e2e/reader.spec.js` "the looked-up word stays visible under its mark in <theme>" (PDF and EPUB, Paper and
+Lamplight): a screenshot of the hovered word, its darkest pixel and the spread to its lightest. Before the fix 3 of 4
+failed: PDF Paper darkest pixel 228 of 255 (no ink at all), PDF Lamplight spread 13, EPUB Lamplight spread 42.
+
+### Hypotheses
+1. The mark's colour is opaque. Evidence: `::highlight(rf-lookup)` used `--accent-soft`, a solid colour in every theme
+   (#f3e2d7, #e3eadd, #3a271c, #26301f); find and read aloud use see-through tokens over the same pages. Confirmed.
+2. In a PDF the mark sits above the words: they are on the canvas under PDF.js's transparent text layer, which is
+   where the highlight paints. Confirmed by the PDF Paper case (a light opaque box, no ink left).
+3. The EPUB copy (`reader/highlight.js`) brought the same opaque colour into each section. Confirmed by the EPUB
+   Lamplight case (dark ink on #3a271c).
+
+### Root cause
+`frontend/src/originalview/frame.css` and `frontend/src/reader/highlight.js` painted the lookup mark in the opaque
+`--accent-soft`.
+
+### Fix
+`frontend/src/styles/tokens.css`: `--lookup-mark`, the accent at 28 % over transparent; `frame.css`: the mark uses it;
+`reader/highlight.js`: an EPUB section gets its computed value (var() resolved) instead of `--accent-soft`.
+
+### Regression test
+The four repro tests: 3 failed before the fix, 4 passed after (`npx playwright test reader.spec.js -g "stays visible
+under its mark"`); screenshots of all four looked at.
+
+### Commit
+fix(ui): let the looked-up word show through its mark

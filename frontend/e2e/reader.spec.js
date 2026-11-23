@@ -2,6 +2,7 @@
 // API mocked, once on a PDF (e2e/fixtures/books/sample.pdf) and once on an illustrated EPUB (reflow.epub).
 import { book, clickTool, contentsPane, expect, openReader, settled, shown, spoken, test, timeToCard, wake, wordPoint } from './fixtures.js';
 
+const shots = process.env.E2E_SHOTS;
 /** "5" -> 5; "2:340" -> [2, 340]. */
 const at = (spot) => (spot.includes(':') ? spot.split(':').map(Number) : Number(spot));
 const before = (a, b) => (Array.isArray(a) ? a[0] < b[0] || (a[0] === b[0] && a[1] < b[1]) : a < b);
@@ -156,6 +157,36 @@ for (const kind of ['pdf', 'epub']) {
       await page.mouse.move(middle.x + middle.width / 2, lamp.y, { steps: 4 });
       await expect(card).toHaveCount(0);
     });
+
+    // C41.2 (issue 29): the lookup mark was an opaque --accent-soft box, which in a PDF covered the canvas's words and
+    // in an EPUB put dark ink on a dark wash in Lamplight. The hovered word's ink must still show through it.
+    for (const theme of ['paper', 'lamplight']) {
+      test(`the looked-up word stays visible under its mark in ${theme}`, async ({ page }) => {
+        await openReader(page);
+        await page.evaluate((t) => { document.documentElement.dataset.theme = t; }, theme);
+        const lamp = await wordPoint(page, 'lamp');
+        await page.mouse.move(5, 5);
+        await page.mouse.move(lamp.x, lamp.y);
+        await expect(page.locator('.rf-wordcard')).toBeVisible();
+        const clip = { x: lamp.left, y: lamp.top, width: lamp.right - lamp.left, height: lamp.bottom - lamp.top };
+        if (shots) await page.screenshot({ path: `${shots}/lookup-mark-${kind}-${theme}.png`, clip: { x: clip.x - 60, y: clip.y - 30, width: 260, height: 140 } });
+        const shot = (await page.screenshot({ clip })).toString('base64');
+        const { ink, wash } = await page.evaluate(async (png) => { // the word's darkest and lightest pixels
+          const img = new Image();
+          img.src = `data:image/png;base64,${png}`;
+          await img.decode();
+          const canvas = Object.assign(document.createElement('canvas'), { width: img.width, height: img.height });
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          const px = ctx.getImageData(0, 0, img.width, img.height).data;
+          const lum = [];
+          for (let i = 0; i < px.length; i += 4) lum.push(0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2]);
+          return { ink: Math.min(...lum), wash: Math.max(...lum) };
+        }, shot);
+        expect(ink, 'the word is drawn').toBeLessThan(90);
+        expect(wash - ink, 'and stands out from the mark').toBeGreaterThan(90);
+      });
+    }
 
     test('two to five selected words are looked up as a phrase', async ({ page, api }) => {
       await openReader(page);

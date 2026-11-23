@@ -2,7 +2,7 @@
 // without touching the DOM; where that API is missing, plain boxes are drawn in a layer that
 // sits under the text, so the book's markup is never changed either way. Since C17.5 the word
 // can be in another document (an EPUB section's iframe): the mark goes in that document's
-// registry, with the page's --accent-soft copied in, and the card is placed by outerBox.
+// registry, with the page's --lookup-mark copied in (C41.2), and the card is placed by outerBox.
 
 const NAME = 'rf-lookup';
 const STYLE = 'data-rf-lookup';
@@ -20,8 +20,9 @@ function styleIn(doc) {
     style.setAttribute(STYLE, '');
     doc.head?.append(style);
   }
-  const soft = getComputedStyle(document.documentElement).getPropertyValue('--accent-soft').trim() || 'rgba(180, 120, 40, 0.25)';
-  style.textContent = `::highlight(${NAME}) { background-color: ${soft}; }`;
+  // C41.2 (issue 29): the see-through --lookup-mark (var() already resolved in a computed value), not the opaque --accent-soft.
+  const mark = getComputedStyle(document.documentElement).getPropertyValue('--lookup-mark').trim() || 'rgba(166, 75, 42, 0.28)';
+  style.textContent = `::highlight(${NAME}) { background-color: ${mark}; }`;
 }
 
 /** Mark range; layer is the fallback's container (positioned, under the text) in this page. */

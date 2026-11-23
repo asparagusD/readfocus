@@ -6277,3 +6277,29 @@ of 6). The bar's tools at 1280 and 1440 px are as before (the markup tools stay 
 
 ### Commit
 fix(ui): place the reading toolbar's tools before it can wrap
+
+## 2026-11-23 C41.G — two e2e tests failed once each on GitHub's runner after the toolbar fix
+
+**Status:** open (not reproduced)
+
+### Symptom
+CI on main 7ef401e (run 45176758942, attempt 1) failed `e2e/read-aloud.spec.js:181` "an EPUB › reads the section in
+view and marks each word in it; Ctrl+Shift+U stops it": after Pause the marked word was "1", not a word of the first
+sentence (`expect('The lamp on the desk threw a small circle of light, and inside Chapter').toContain(...)`, line
+188). CI on readfocus-2.0 365b774 (run 45170659523) failed `e2e/ocr.spec.js:17` "a scanned page › is read by OCR
+once, gets a text layer, and its words can be looked up". Each run: 1 failed, 450 passed.
+
+### Repro
+    npx playwright test read-aloud.spec.js ocr.spec.js -g "reads the section in view|is read by OCR once" --repeat-each=5
+
+Not reproduced: 10 of 10 pass at 365b774 and 10 of 10 at f568ad3 (before C41). The re-run of the failed job on main
+(attempt 2) passed, with deploy-render.
+
+### Hypotheses
+1. Timing on GitHub's slower runner: the read-aloud test pauses a fake voice that moves on by timers (the same test's
+   pause flaked once in C40.4d). Not tested further: no local reproduction.
+2. Fallout from C41.G's layout effect (a measure after every toolbar render)? Not supported: both tests pass 10 of 10
+   locally with it, and C41.G changes only the toolbar's tool placement.
+
+### Commit
+None: logged only; reopen if either fails again.

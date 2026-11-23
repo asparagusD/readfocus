@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 1034,
-    "inventoried": 891,
+    "tracked": 1036,
+    "inventoried": 893,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 225,
-      "size_bytes": 20177,
+      "size_bytes": 20196,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -869,6 +869,14 @@
       "size_bytes": 2472,
       "role": "service",
       "purpose": "PDF page text with bounded memory (C18.G): page_texts reads every page's pypdf text 50 pages per fresh reader (the same text as one reader, about a quarter of the memory); release_memory runs gc and glibc malloc_trim(0) so a phase's freed memory goes back on Linux; freeze_startup_heap (C33.G, called in backend/main.py's lifespan) keeps the loaded modules out of later collections so that gc never holds the event loop for a walk of the whole heap. Used by ingestion, book_structure's page starts and the prose rebuild."
+    },
+    {
+      "path": "backend/services/plain_math.py",
+      "language": "python",
+      "lines": 161,
+      "size_bytes": 8087,
+      "role": "service",
+      "purpose": "C41.3 (issue 30), standard library only: plain(text) turns the LaTeX in looked-up text (Wiktionary's through the Free Dictionary API, Wikipedia's {\\displaystyle}) into Unicode (blackboard letters, relations, Greek, sub- and superscripts, a/b, a root), a script with no Unicode form into x_b or 2^(q+1), and markup it cannot read into None; text with no markup, prices included, comes back unchanged."
     },
     {
       "path": "backend/services/processing_jobs.py",
@@ -1847,6 +1855,14 @@
       "purpose": "Pytest for backend/services/pdf_text.py: batched page text equals one reader's on sample.pdf, ingestion text unchanged, book_structure reads page starts through the batched reader, release_memory never raises."
     },
     {
+      "path": "backend/tests/test_plain_math.py",
+      "language": "python",
+      "lines": 61,
+      "size_bytes": 2562,
+      "role": "test",
+      "purpose": "Pytest for plain_math.plain: issue 30's 'graph' definition, text with no markup (a price too) left alone, common LaTeX to Unicode, scripts with no Unicode form written plainly, unreadable markup to None, the script maps' coverage."
+    },
+    {
       "path": "backend/tests/test_planner_strategy.py",
       "language": "python",
       "lines": 220,
@@ -2361,8 +2377,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6520,
-      "size_bytes": 1276179,
+      "lines": 6521,
+      "size_bytes": 1276888,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -7073,8 +7089,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 893,
-      "size_bytes": 327742,
+      "lines": 895,
+      "size_bytes": 328454,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

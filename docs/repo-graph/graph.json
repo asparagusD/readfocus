@@ -1286,6 +1286,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/services/plain_math.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
       "id": "file:backend/services/processing_jobs.py",
       "type": "file",
       "role": "service",
@@ -2013,6 +2019,12 @@
     },
     {
       "id": "file:backend/tests/test_pdf_text.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_plain_math.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -10836,6 +10848,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_pdf_text.py",
       "to": "file:backend/services/pdf_text.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_plain_math.py",
+      "to": "file:backend/services/plain_math.py"
     },
     {
       "type": "imports",
